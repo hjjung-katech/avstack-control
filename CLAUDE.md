@@ -30,9 +30,8 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 - 06~08 Autoware/Mapping/Closed-loop: TODO
 
 ## 열린 이슈 (해결 시 이 섹션과 issues.tsv를 함께 갱신)
-- 현재 열린 blocker 없음. (AVS-001/002/003 모두 RESOLVED — 상세는 issues.tsv)
+- AVS-002: OPEN(MED) — 대형 지도 로드 시 SIM 크래시. `sangam_nobuilding`(686MB) 로드 중 Vulkan Out of memory→SIGSEGV. **4GB VRAM 부족**(K-City 350MB는 정상). 완화: 4GB에 맞는 지도 사용. (※ 이전 "부분 렌더/GPU 성능" 진단은 증상 오해로 정정됨)
 - AVS-001: RESOLVED — SR 창 미표시는 libxcb-xinerama0 + liblapack3/libblas3 누락. 설치 후 SIM 경유로 정상. SR 단독 로그인은 계정 ID 필요(OPEN-05).
-- AVS-002: RESOLVED(진단) — 지도 저하는 GPU 성능 부족(RTX 3050, 최소사양 RTX 2060 Super 미달, 사용률 96–99%). NoMachine/VRAM 아님. 기능 검증 blocker 아님.
 - AVS-003: RESOLVED — MORAISim.sh exit 127(백틱)·SingleInstance 양보-exit0. 래퍼에서 흡수·가드.
 
 ## 커밋 규칙
