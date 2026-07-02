@@ -3,8 +3,8 @@
 **목적:** MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경을 Ubuntu에서 재현 가능하게 구축하고, 단계별 검증·이슈·로그·결정사항을 체계적으로 관리한다.
 **대상 머신:** `t15p-dev-ubt`
 **기준 OS:** Ubuntu 22.04.5 LTS
-**문서 버전:** v1.4 (2026-07-02 개정)
-**현재 상태:** Stage 00~02 PASS / AVS-001 해결 / 기록 인프라·스크립트 구축 완료 / private GitHub(hjjung-katech) 원격 동기화 중
+**문서 버전:** v1.5 (2026-07-02 개정)
+**현재 상태:** Stage 00~02 PASS / AVS-001 해결 / 실행법 실측 확정(MORAISim.sh 127·SingleInstance) / private GitHub(hjjung-katech) 원격 동기화 중
 
 ## 개정 이력
 
@@ -15,6 +15,7 @@
 | v1.2 | 2026-07-02 | (1) MORAI 실제 경로 반영: `~/avstack/morai/launcher/MoraiLauncher_lin.x86_64` (OPEN-01 해소) (2) Stage 00 증거 파일 실존 확인 (OPEN-02 해소) (3) CLAUDE.md 확정본 배치 확인 (OPEN-07 해소) (4) 3계층 기록 모델 명시 (5) 커밋 컨벤션 확정 (6) 문서 위치·활용 규칙 신설 (27장) |
 | v1.3 | 2026-07-02 | (1) 브랜치 정책 신설: main 단일 브랜치(trunk-based), 예외 2종 (8.5) (2) Git 원격 저장소 확정: private GitHub `hjjung-katech`, SSH (OPEN-04 해소) |
 | v1.4 | 2026-07-02 | (1) **공식 실행법 반영**: `MORAISim.sh` 래퍼 채택 + 매뉴얼 URL(설치·설정) (10.2, 25장) (2) 실제 MORAI 디렉터리 구조 반영: `launcher/MoraiLauncher_Lin`(심볼릭 링크)→`_a`/`_b` 슬롯, SIM/SR은 그 하위 설치 (5.1) (3) **AVS-001 해결**: `libxcb-xinerama0` + `liblapack3`/`libblas3` 누락이 원인, SR=PyInstaller/PySide2, Launcher가 자식 stderr 은폐 (11장) (4) SIM은 Vulkan+NVIDIA 렌더 확인 → `__GLX_*` 변수는 no-op (10.2) (5) 원격 GUI 운영법: SSH에서 `DISPLAY=:1`로 NoMachine 화면에 창 출력 (18.6 신설) (6) GPU 최소사양(RTX 2060 Super) 대비 RTX 3050 4GB 미달 → AVS-002 (10.4) (7) Stage 01/02 PASS, 기록 인프라·record_*.sh 구축 |
+| v1.5 | 2026-07-02 | **실행 동작 실측 확정** (10.2 재작성): (1) MORAISim.sh는 런처를 백틱 실행해 stdout `Found path:`를 명령 취급 → **항상 exit 127**(런처는 정상). 래퍼가 흡수 (2) 런처는 **SingleInstance** — 살아있는 인스턴스가 있으면 새 실행은 **창 없이 양보-exit0**. 래퍼에 중복 가드 추가 (3) `unity.lock`은 정상 종료해도 잔존, 단 죽은 PID는 다음 실행이 인수 (4) **직접 실행 + 정상 닫기 = exit 0**(진짜 정상 종료) 확인 → 래퍼 `USE_MORAISIM=0` 토글 (5) '정상 종료' 판정을 종료코드→**창 표시+Player.log**로 보정 (6) 런처는 CEF 기반(임베디드 GPU swiftshader 경고는 비치명) (7) AVS-003 등록 |
 
 ---
 
@@ -374,6 +375,21 @@ $ ./MORAISim.sh
 **왜 v1.2는 `MORAISim.sh`를 반영하지 않았나:** 당시 파일 배치만 보고 런처 바이너리(`MoraiLauncher_Lin.x86_64`)를 `-logFile`과 함께 직접 실행하도록 작성했다. 공식 경로는 keylok/Kvaser 준비 단계를 포함한다.
 
 > **안전 확인 (이 호스트):** `MORAISim.sh`의 keylok 설치 라인은 **주석 처리**돼 있고, Kvaser `sudo ln`은 `/usr/lib/libcanlib.so`가 없어 **건너뛴다** → 현재 sudo가 실제로 실행되지 않는다. 향후 MORAI 빌드가 이 라인을 되살리면 실행 전 검토한다(금지: sudo는 사용자 확인 후).
+
+#### 10.2.1 실행 동작 실측 (v1.5, AVS-003) — 종료코드·SingleInstance·lock
+
+실제로 여러 번 실행해 확인한 동작. **종료코드만으로 성공/정상종료를 판단하면 안 된다.**
+
+| 실행 방식 / 상황 | 종료코드 | 의미 |
+|---|---|---|
+| 직접 실행(깨끗한 상태), 창 표시 후 닫기 | **0** | 진짜 정상 종료 |
+| `MORAISim.sh` 경유 | **항상 127** | 백틱이 런처 stdout `Found path: …`를 명령 실행(스크립트 버그). 런처 실행은 정상 |
+| 살아있는 인스턴스가 있는 상태로 재실행 | **0** (창 없음) | **SingleInstance 양보** — 정상종료 아님 |
+
+- **SingleInstance:** 런처는 단일 인스턴스만 허용. 이미 떠 있으면 두 번째 실행은 창 없이 넘기고 exit 0. → 새로 띄우기 전 기존 인스턴스를 닫는다(래퍼가 `pgrep`로 가드).
+- **`unity.lock`:** 정상 종료해도 파일이 남는다. 단 그 PID가 죽었으면 다음 실행이 자동 인수하므로 보통 문제없다. (창이 계속 안 뜨고 양보-exit0만 반복되면 살아있는 유령 인스턴스를 의심.)
+- **런처는 CEF(Chromium) 기반**이라 임베디드 GPU 프로세스가 `swiftshader/libGLESv2.so` 미탑재로 경고를 남기지만 **비치명**(UI는 정상 표시).
+- **판정 기준:** "정상 종료"는 종료코드가 아니라 **① 창 표시 ② `~/.config/unity3d/MORAI/Simulator/Player.log`의 정상 셧다운 마커 ③ 프로세스 소멸**로 판단한다. 래퍼는 `MORAISim.sh`의 127을 흡수하고, `USE_MORAISIM=0`이면 직접 실행(깨끗한 종료코드)한다.
 
 ### 10.3 실행 절차
 
