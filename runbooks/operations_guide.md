@@ -3,8 +3,8 @@
 **목적:** MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경을 Ubuntu에서 재현 가능하게 구축하고, 단계별 검증·이슈·로그·결정사항을 체계적으로 관리한다.
 **대상 머신:** `t15p-dev-ubt`
 **기준 OS:** Ubuntu 22.04.5 LTS
-**문서 버전:** v1.7 (2026-07-02 개정)
-**현재 상태:** Stage 00~02 PASS / AVS-001·003 해결 / AVS-002 정정(대형 지도 VRAM 크래시, OPEN) / private GitHub(hjjung-katech) 원격 동기화 중
+**문서 버전:** v1.8 (2026-07-02 개정)
+**현재 상태:** Stage 00~03 PASS / AVS-001·003 해결 / AVS-002(대형 지도 VRAM 크래시)·AVS-004(SR GUI 검은화면)·AVS-005(SIM 리사이즈 크래시) OPEN / private GitHub(hjjung-katech) 원격 동기화 중
 
 ## 개정 이력
 
@@ -18,6 +18,7 @@
 | v1.5 | 2026-07-02 | **실행 동작 실측 확정** (10.2 재작성): (1) MORAISim.sh는 런처를 백틱 실행해 stdout `Found path:`를 명령 취급 → **항상 exit 127**(런처는 정상). 래퍼가 흡수 (2) 런처는 **SingleInstance** — 살아있는 인스턴스가 있으면 새 실행은 **창 없이 양보-exit0**. 래퍼에 중복 가드 추가 (3) `unity.lock`은 정상 종료해도 잔존, 단 죽은 PID는 다음 실행이 인수 (4) **직접 실행 + 정상 닫기 = exit 0**(진짜 정상 종료) 확인 → 래퍼 `USE_MORAISIM=0` 토글 (5) '정상 종료' 판정을 종료코드→**창 표시+Player.log**로 보정 (6) 런처는 CEF 기반(임베디드 GPU swiftshader 경고는 비치명) (7) AVS-003 등록 |
 | v1.6 | 2026-07-02 | **AVS-002 진단** (10.4): 지도 부분표시/저하 원인을 실측 판정 — NoMachine 전송(로컬 콘솔과 동일)과 VRAM 고갈(2.6/4GB) 모두 배제, GPU 연산 병목이 원인이라 결론. 서버측 `:1` 캡처(xwd→png) 기법 도입. **(주의: 이 진단은 v1.7에서 정정됨 — 증상 오해)** |
 | v1.7 | 2026-07-02 | **AVS-002 정정** (10.4): 사용자 원래 뜻은 "부분 렌더"가 아니라 **"일부 지도만 열린다"**였다. 실제 이슈는 **대형 지도 로드 크래시** — `sangam_nobuilding`(686MB) 로드 중 `Vulkan - Out of memory!` → `vk::DataBuffer::CreateResource` SIGSEGV. **4GB VRAM 부족**이 진짜 원인(K-City 350MB는 정상). 완화: 4GB에 맞는 지도 사용. 증거 `~/avstack/logs/avs002_sangam_crash_*.log`. 교훈: 애매한 요청은 먼저 의도 확인 |
+| v1.8 | 2026-07-02 | **Stage 03 PASS** (12장): KATRI + `Scenario_Cut_In_1.xosc`, Ego Control=Built-in → **ego 주행 확인**(프레임차 모션 분석), gRPC 7789 연결, Init Scenario Complete. 2개 이슈 신설: **AVS-004** SR VTK GUI가 이 환경에서 검게 렌더(소프트웨어 GL·QT_XCB_none·SIM끔 모두 무효 → 블라인드 조작), **AVS-005** SIM 창 리사이즈 시 hang/크래시. VRAM 제약상 예제는 KATRI(386MB) 등 4GB 적합 지도로 |
 
 ---
 
@@ -489,6 +490,16 @@ find ~/avstack/morai ~/avstack/scenarios -iname "*.xosc" | head -50
 
 절차: SIM 실행 → SR 실행 → 예제 `.xosc` 로드 → Run > Start Simulation → Ego Control = Built-in → Ego/NPC 동작 확인 → Stop.
 통과: `.xosc` 로드 / MGeo 로드 / Start 성공 / Built-in 동작 / 종료 가능. 통과 시 `gate-03-xosc-builtin` 태그.
+
+### 12.1 결과 (Stage 03 PASS, v1.8)
+
+- **지도/시나리오 선택:** 예제 `.xosc`는 전부 `R_KR_PG_KATRI/`에 있다. **KATRI(386MB)는 4GB에 안전**(K-City 350MB급). Suburb_02(750MB)·K-city_2025(822MB)는 sangam(686MB)처럼 **VRAM 크래시 위험이라 피한다**(AVS-002).
+- **결과:** `Scenario_Cut_In_1.xosc` + Ego Control=Built-in으로 **ego 주행 확인**(서버측 프레임차 모션 분석: 도로 구간이 바뀜). `Vehicle is set EgoMode True`, gRPC `0.0.0.0:7789` 연결, `Init Scenario Complete`. 증거 `~/avstack/logs/stage03_*`.
+- **캐비엇:**
+  - **AVS-004 (SR GUI 검은 화면):** SR의 VTK/OpenGL 창이 이 X 환경(NoMachine+offload)에서 검게 렌더된다. 소프트웨어 GL(`LIBGL_ALWAYS_SOFTWARE=1`)·`QT_XCB_GL_INTEGRATION=none`·SIM 끔 모두 무효 → GPU 경합/캡처/GL-백엔드 문제가 아닌 **렌더 경로 문제**. 현재는 **버튼 위치를 더듬어 블라인드로 조작**하고 결과는 SIM 화면으로 검증한다.
+  - **AVS-005 (SIM 리사이즈 크래시):** SIM 창을 줄이면 swapchain 재초기화 폭주로 hang/크래시 → **SIM 창 크기를 건드리지 않는다.**
+  - 짧은 종료 + `[ERROR][VehicleRoute] NOT_FOUND_LINK_ID`(경로 링크 불일치) 경고, NPC 컷인은 명시 확인 못 함.
+- **진단 도구:** 모션 판정은 `xwd -root`로 서버측 프레임을 연속 캡처해 프레임차(변화 픽셀 %)로 계산했다(SIM은 Vulkan이라 서버측 캡처가 유효).
 
 ---
 
