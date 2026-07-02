@@ -3,7 +3,7 @@
 **목적:** MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경을 Ubuntu에서 재현 가능하게 구축하고, 단계별 검증·이슈·로그·결정사항을 체계적으로 관리한다.
 **대상 머신:** `t15p-dev-ubt`
 **기준 OS:** Ubuntu 22.04.5 LTS
-**문서 버전:** v1.2 (2026-07-02 개정)
+**문서 버전:** v1.3 (2026-07-02 개정)
 **현재 상태:** Stage 00 PASS / git init·CLAUDE.md 확정본·MORAI 파일 배치 완료 / 첫 커밋 대기
 
 ## 개정 이력
@@ -13,6 +13,7 @@
 | v1.0 | 2026-07-02 | 최초 작성 |
 | v1.1 | 2026-07-02 | settings.json 최종본, .gitignore 스코프 축소, sandbox 항목, additionalDirectories, CLAUDE.md 확정본, record_decision.sh, 진행 현황·Open Items 신설 |
 | v1.2 | 2026-07-02 | (1) MORAI 실제 경로 반영: `~/avstack/morai/launcher/MoraiLauncher_lin.x86_64` (OPEN-01 해소) (2) Stage 00 증거 파일 실존 확인 (OPEN-02 해소) (3) CLAUDE.md 확정본 배치 확인 (OPEN-07 해소) (4) 3계층 기록 모델 명시 (5) 커밋 컨벤션 확정 (6) 문서 위치·활용 규칙 신설 (27장) |
+| v1.3 | 2026-07-02 | (1) 브랜치 정책 신설: main 단일 브랜치(trunk-based), 예외 2종 (8.5) (2) Git 원격 저장소 확정: private GitHub `hjjung-katech`, SSH (OPEN-04 해소) |
 
 ---
 
@@ -51,7 +52,7 @@
 | OPEN-01 | MORAI 설치 경로 | **해소** | `~/avstack/morai/launcher/MoraiLauncher_lin.x86_64`로 확정. 스크립트 기본값 반영 완료 |
 | OPEN-02 | Stage 00 증거 파일 | **해소** | `~/avstack/logs/glxinfo_nvidia_prime.txt` 실존 확인 |
 | OPEN-03 | Claude Code 계정 유형 | 미정 | Pro/Max/Team/Console 중 결정. 회사 계정이면 조직 정책 확인 |
-| OPEN-04 | Git 원격 저장소 | 보류 | 로컬 전용 유지. 사내 GitLab 사용 시 보안 검토 후 결정 |
+| OPEN-04 | Git 원격 저장소 | **해소** | private GitHub remote `hjjung-katech` (SSH)로 확정. 브랜치 정책은 8.5 |
 | OPEN-05 | MORAI 26.R1 계정 권한 | 미확인 | Stage 01 Launcher 로그인에서 확인. Scenario Runner 설치 권한 포함 |
 | OPEN-06 | VERSIONS.lock | 미생성 | Claude Code 설치 시 `>>`로 자동 생성 |
 | OPEN-07 | CLAUDE.md 정합 | **해소** | 확정본으로 배치 완료 |
@@ -317,6 +318,22 @@ git log --oneline
 - 이슈 해결 커밋 메시지에는 원인을 요약한다 (`issue: resolve AVS-001 <원인 한 줄>`). issues.tsv의 resolution과 대응.
 - 주요 Gate(Stage 03, 05, 08) 통과 시 태그를 남긴다: `git tag -a gate-03-xosc-builtin -m 'scenario runner builtin verified'`.
 - 민감정보·로그·대용량 파일이 staged 되었는지 커밋 전 `git status`로 확인한다.
+
+### 8.5 브랜치 정책 (v1.3 신설)
+
+**원칙: `main` 단일 브랜치 (trunk-based).** 이 저장소는 제어·기록 저장소이며 실행 데이터(코드가 아님)를 다루므로, 장수 브랜치나 PR 흐름을 두지 않고 `main`에 직접 커밋한다. 원격은 private GitHub `hjjung-katech` (SSH), 커밋 후 `git push`로 동기화한다 (OPEN-04 해소).
+
+예외는 다음 두 경우뿐이다.
+
+1. **코드 개발은 별도 저장소에서.** 자율주행 SW·노드·연동 코드를 본격적으로 개발할 때는 이 저장소에 브랜치를 만들지 않고 별도 저장소를 사용한다. 이 저장소는 절차·기록·설정 전용으로 유지한다.
+2. **위험한 스크립트 변경 시 하루짜리 `try/` 브랜치.** 되돌리기 어렵거나 실행 환경을 망가뜨릴 수 있는 스크립트 변경은 `try/<요약>` 브랜치에서 시험하고, 검증되면 `main`에 머지한 뒤 즉시 브랜치를 삭제한다. 하루 안에 정리한다 — 살아남는 `try/` 브랜치를 두지 않는다.
+
+```bash
+git switch -c try/risky-bootstrap-change   # 시험 시작
+# ... 검증 ...
+git switch main && git merge try/risky-bootstrap-change
+git branch -d try/risky-bootstrap-change   # 즉시 삭제
+```
 
 ---
 
