@@ -1,0 +1,5 @@
+id	date	status	decision	reason
+ADR-001	2026-07-02	ACCEPTED	Use NVIDIA PRIME offload for MORAI	Default OpenGL uses Intel; NVIDIA offload confirmed (SIM renders via Vulkan on NVIDIA)
+ADR-002	2026-07-02	ACCEPTED	Defer Docker installation	Current focus is MORAI/SR GUI execution
+ADR-003	2026-07-02	ACCEPTED	Use three-tier records: TSV, evidence logs, runbooks	TSV for state, raw logs for evidence, markdown for procedures
+ADR-004	2026-07-02	ACCEPTED	Run Claude Code only in avstack-control	Limit file access scope

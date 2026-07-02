@@ -22,15 +22,16 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 
 ## Stage 현황 (Gate 통과 시 이 섹션을 갱신하고 stage 기록과 함께 커밋)
 - 00 Remote GPU: PASS
-- 01 MORAI Launcher/SIM: 진행 중
-- 02 Scenario Runner Window: TODO
+- 01 MORAI Launcher/SIM: PASS
+- 02 Scenario Runner Window: PASS
 - 03 Example XOSC Built-in: TODO
 - 04 ROS2 Humble Host: TODO
 - 05 MORAI ROS2 Native Topic: TODO
 - 06~08 Autoware/Mapping/Closed-loop: TODO
 
 ## 열린 이슈 (해결 시 이 섹션과 issues.tsv를 함께 갱신)
-- AVS-001: Start Scenario Runner 버튼 클릭 후 창 미표시 (Stage 02, HIGH)
+- AVS-001: RESOLVED — SR 창 미표시는 libxcb-xinerama0 + liblapack3/libblas3 누락이 원인. 설치 후 SIM 경유로 정상. SR 단독 로그인은 계정 ID 필요(OPEN-05).
+- AVS-002: MORAI SIM 지도 NoMachine 화면에 일부만 표시 (Stage 01, MED). NoMachine의 Vulkan 화면전송 or 4GB VRAM 추정.
 
 ## 커밋 규칙
 - 커밋 시점: Stage 통과, 이슈 등록/해결, 스크립트·설정 변경 시에만.
