@@ -3,8 +3,8 @@
 **목적:** MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경을 Ubuntu에서 재현 가능하게 구축하고, 단계별 검증·이슈·로그·결정사항을 체계적으로 관리한다.
 **대상 머신:** `t15p-dev-ubt`
 **기준 OS:** Ubuntu 22.04.5 LTS
-**문서 버전:** v1.6 (2026-07-02 개정)
-**현재 상태:** Stage 00~02 PASS / AVS-001·002·003 해결(진단) / private GitHub(hjjung-katech) 원격 동기화 중
+**문서 버전:** v1.7 (2026-07-02 개정)
+**현재 상태:** Stage 00~02 PASS / AVS-001·003 해결 / AVS-002 정정(대형 지도 VRAM 크래시, OPEN) / private GitHub(hjjung-katech) 원격 동기화 중
 
 ## 개정 이력
 
@@ -16,7 +16,8 @@
 | v1.3 | 2026-07-02 | (1) 브랜치 정책 신설: main 단일 브랜치(trunk-based), 예외 2종 (8.5) (2) Git 원격 저장소 확정: private GitHub `hjjung-katech`, SSH (OPEN-04 해소) |
 | v1.4 | 2026-07-02 | (1) **공식 실행법 반영**: `MORAISim.sh` 래퍼 채택 + 매뉴얼 URL(설치·설정) (10.2, 25장) (2) 실제 MORAI 디렉터리 구조 반영: `launcher/MoraiLauncher_Lin`(심볼릭 링크)→`_a`/`_b` 슬롯, SIM/SR은 그 하위 설치 (5.1) (3) **AVS-001 해결**: `libxcb-xinerama0` + `liblapack3`/`libblas3` 누락이 원인, SR=PyInstaller/PySide2, Launcher가 자식 stderr 은폐 (11장) (4) SIM은 Vulkan+NVIDIA 렌더 확인 → `__GLX_*` 변수는 no-op (10.2) (5) 원격 GUI 운영법: SSH에서 `DISPLAY=:1`로 NoMachine 화면에 창 출력 (18.6 신설) (6) GPU 최소사양(RTX 2060 Super) 대비 RTX 3050 4GB 미달 → AVS-002 (10.4) (7) Stage 01/02 PASS, 기록 인프라·record_*.sh 구축 |
 | v1.5 | 2026-07-02 | **실행 동작 실측 확정** (10.2 재작성): (1) MORAISim.sh는 런처를 백틱 실행해 stdout `Found path:`를 명령 취급 → **항상 exit 127**(런처는 정상). 래퍼가 흡수 (2) 런처는 **SingleInstance** — 살아있는 인스턴스가 있으면 새 실행은 **창 없이 양보-exit0**. 래퍼에 중복 가드 추가 (3) `unity.lock`은 정상 종료해도 잔존, 단 죽은 PID는 다음 실행이 인수 (4) **직접 실행 + 정상 닫기 = exit 0**(진짜 정상 종료) 확인 → 래퍼 `USE_MORAISIM=0` 토글 (5) '정상 종료' 판정을 종료코드→**창 표시+Player.log**로 보정 (6) 런처는 CEF 기반(임베디드 GPU swiftshader 경고는 비치명) (7) AVS-003 등록 |
-| v1.6 | 2026-07-02 | **AVS-002 진단 완료** (10.4): 지도 부분표시/저하 원인을 실측 판정 — NoMachine 전송(로컬 콘솔과 동일)과 VRAM 고갈(2.6/4GB) 모두 배제, **GPU 연산 병목(사용률 96–99%, 최소사양 미달)**이 원인. 서버측 `:1` 캡처(xwd→png)로 렌더 vs 전송 판별. 기능 검증엔 blocker 아님. 증거 `~/avstack/logs/avs002_*` |
+| v1.6 | 2026-07-02 | **AVS-002 진단** (10.4): 지도 부분표시/저하 원인을 실측 판정 — NoMachine 전송(로컬 콘솔과 동일)과 VRAM 고갈(2.6/4GB) 모두 배제, GPU 연산 병목이 원인이라 결론. 서버측 `:1` 캡처(xwd→png) 기법 도입. **(주의: 이 진단은 v1.7에서 정정됨 — 증상 오해)** |
+| v1.7 | 2026-07-02 | **AVS-002 정정** (10.4): 사용자 원래 뜻은 "부분 렌더"가 아니라 **"일부 지도만 열린다"**였다. 실제 이슈는 **대형 지도 로드 크래시** — `sangam_nobuilding`(686MB) 로드 중 `Vulkan - Out of memory!` → `vk::DataBuffer::CreateResource` SIGSEGV. **4GB VRAM 부족**이 진짜 원인(K-City 350MB는 정상). 완화: 4GB에 맞는 지도 사용. 증거 `~/avstack/logs/avs002_sangam_crash_*.log`. 교훈: 애매한 요청은 먼저 의도 확인 |
 
 ---
 
@@ -407,15 +408,17 @@ script -af ~/avstack/runs/stage01_morai_$(date +%Y%m%d_%H%M%S).log
 
 **결과 (2026-07-02 PASS):** SIM이 **Vulkan으로 NVIDIA RTX 3050을 선택**해 기동(로그 `~/.config/unity3d/MORAI/Simulator/Player.log`: `Selected physical device … RTX 3050`), MGeo 지도 데이터 로드(교차로·신호등 초기화 확인), 정상 종료(Vulkan PSO 캐시 저장). VK 메모리 에러 없음.
 
-> **⚠️ GPU 최소사양 미달 → AVS-002 (진단 완료, v1.6):** 매뉴얼 최소사양은 **RTX 2060 Super**인데 이 머신은 **RTX 3050 Laptop 4GB**로 미달이다. 지도가 "일부만/저하되어" 보이는 증상(AVS-002)을 실측으로 진단한 결과 **GPU 성능 병목**이 원인이다.
+> **⚠️ GPU 최소사양 미달 → AVS-002 (v1.7 정정):** 매뉴얼 최소사양은 **RTX 2060 Super**인데 이 머신은 **RTX 3050 Laptop 4GB**로 미달이다.
 >
-> - **NoMachine 전송 문제 배제:** 로컬 물리 콘솔과 NoMachine이 (압축 품질차만 빼면) **동일**하게 보임. 서버측 `:1` 스크린샷(xwd→png)도 로컬과 일치 → 전송 계층 문제 아님.
-> - **VRAM 고갈 배제:** map 로드 중 **2.6/4GB** 사용(SIM 2.36GB), 1.5GB 여유 → OOM 아님.
-> - **원인 = GPU 연산 병목:** map 렌더 중 **GPU 사용률 96–99% 고정**. 최소사양 미달 카드가 렌더를 못 따라가 품질/일부 저하. 이는 이 GPU에서의 **실제 렌더 결과**이며 설정/전송 버그가 아니다.
-> - 증거: `~/avstack/logs/avs002_serverside_map_*.png`, `~/avstack/logs/avs002_gpu_*.txt`.
-> - **완화(선택):** SIM 품질/해상도 하향. 단 하드웨어 한계이므로 근본 해결은 상위 GPU. **기능 검증(topic/물리/폐루프)에는 blocker 아님** — 시각 품질만의 문제.
+> **정정 경위:** 사용자의 "지도 표시도 일부만 가능"을 처음 **"부분 렌더"로 오해**해 GPU 연산 병목으로 진단(v1.6)했으나, 실제 뜻은 **"일부 지도만 열린다"**였다. 재확인 결과 실제 이슈는 아래와 같다.
 >
-> 참고 기법: SSH에서 `DISPLAY=:1 XAUTHORITY=~/.Xauthority xwd -root | python3 xwd2png.py` 로 서버측 프레임을 직접 캡처해 "렌더 vs 전송"을 가를 수 있다.
+> - **실제 증상:** 특정 **대형 지도** 로드 시 SIM이 **크래시**한다. `sangam_nobuilding`(686MB 씬) → 크래시, `K-City`(350MB) → 정상.
+> - **원인 = VRAM 고갈:** 로드 중 `Vulkan - Out of memory!` → `vk::DataBuffer::CreateResource()`에서 **SIGSEGV**. 4GB VRAM에 대형 씬이 안 들어간다. 증거 `~/avstack/logs/avs002_sangam_crash_*.log`.
+> - **참고(별개 관찰):** 열리는 지도의 렌더가 다소 성기게/저채도로 보이는 건 서버측 `:1` 캡처=로컬=NoMachine 동일 → 전송 문제 아닌 GPU 성능 결과이며, 기능엔 무관.
+> - **완화:** 4GB에 들어가는 지도 사용(K-City 등). 대형 지도는 >4GB GPU 필요. 텍스처/품질 하향으로 여유 확보 시도 가능.
+> - **blocker 여부:** 기능 검증은 K-City 등으로 진행 가능하므로 하드 blocker 아니나, **사용 가능한 지도가 제한**된다.
+>
+> 진단 기법: 크래시는 `~/.config/unity3d/MORAI/Simulator/Player.log`의 스택트레이스로, 렌더 vs 전송은 `DISPLAY=:1 xwd -root | python3 xwd2png.py` 서버측 캡처로 가른다.
 
 ### 10.5 실패 시 확인
 
