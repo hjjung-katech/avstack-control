@@ -7,7 +7,7 @@ set -uo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 source "$HERE/env.sh"
 
-EGO_TOPIC="${EGO_TOPIC:-/ego_vehicle_status}"
+EGO_TOPIC="${EGO_TOPIC:-/Ego_topic}"     # 실측: SIM(rosbridge) 기본 토픽명 (morai_msgs/EgoVehicleStatus)
 EGO_TYPE="${EGO_TYPE:-EgoVehicleStatus}"
 COUNT="${OFFSET_COUNT:-50}"
 

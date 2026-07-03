@@ -9,8 +9,8 @@ offset = wall_recv_time - header.stamp 를 평균/표준편차로 보고한다.
   source ~/avstack/ros2_ws/install/setup.bash
   python3 offset_probe.py --topic /Ego_topic --type EgoVehicleStatus --count 50
 
---type 은 morai_ros2_msgs/msg 의 클래스명(EgoVehicleStatus, GPSMessage, ObjectStatusList,
-RadarDetections 등 std_msgs/Header 를 가진 타입). 또는 sensor_msgs 표준 타입도 지원.
+--type 은 morai_msgs/msg(우선) 또는 morai_ros2_msgs/msg 의 클래스명(EgoVehicleStatus, GPSMessage,
+ObjectStatusList 등 std_msgs/Header 를 가진 타입). 또는 sensor_msgs 표준 타입도 지원.
 """
 import argparse, importlib, statistics, sys
 import rclpy
@@ -18,8 +18,8 @@ from rclpy.node import Node
 
 
 def resolve_type(type_name: str):
-    # morai_ros2_msgs 우선, 실패 시 sensor_msgs
-    for pkg in ("morai_ros2_msgs.msg", "sensor_msgs.msg", "nav_msgs.msg"):
+    # morai_msgs 우선(실측: SIM/rosbridge 가 morai_msgs/... 로 advertise), 그 다음 원본/표준
+    for pkg in ("morai_msgs.msg", "morai_ros2_msgs.msg", "sensor_msgs.msg", "nav_msgs.msg"):
         try:
             mod = importlib.import_module(pkg)
             if hasattr(mod, type_name):
