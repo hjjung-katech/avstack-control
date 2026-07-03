@@ -16,3 +16,5 @@ env/*license*
 *.mp4
 *.zip
 *.tar.gz
+__pycache__/
+*.pyc
