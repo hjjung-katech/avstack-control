@@ -1,115 +1,84 @@
-#!/usr/bin/env python3
-"""Stage 03.5 / Sprint 0 — Experiment 2: Scenario Runner Python API WITH QCoreApplication.
+#!/usr/bin/env python3.7
+"""Stage 03.5 / Sprint 0 — Experiment 2: OpenSCENARIO API (22.R3) 연결 스모크, QApplication 하에서.
 
-Experiment 1(01_connect_no_qt.py)이 실패할 때만 실행한다. Qt 이벤트 루프가
-필요한지 확인하기 위해 QCoreApplication을 띄운 상태에서 동일 호출을 반복한다.
-성공하면 "Qt(이벤트 루프) 필요" 판정 → api_contract.md에 Adapter 프로세스 격리 설계 채택을 기록한다.
+Experiment 1(01_connect_no_qt.py)이 실패할 때만 실행한다. 실제 client(OpenScenarioClientWrapper)는
+PyQt5 QObject이고 내부에서 QtWidgets를 import 하므로, 이벤트 루프가 필요한 경우를 대비해
+**QApplication**(QCoreApplication 아님 — 위젯 심볼 때문) 하에서 동일 스모크를 반복한다.
+성공하면 "Qt 이벤트 루프 필요" 판정 → api_contract.md에 Adapter 프로세스 격리 설계 채택을 기록.
 
-실행은 사용자가 SIM+Runner를 켠 상태에서 직접 한다 (run_sprint0.sh 경유).
+요구: Python 3.7.3, sourcedefender, PyQt5. 실행은 사용자가 SIM+Runner 켠 상태에서 직접.
 """
+import os
 import sys
 import traceback
 
-# ============================================================================
-# TODO(사용자 확정): 01_connect_no_qt.py 상단과 동일하게 채운다 (같은 값 사용).
-# ----------------------------------------------------------------------------
-API_SRC_DIR  = ""                        # 01과 동일 (다운로드한 SR API lib 폴더)
-API_MODULE   = "TODO_module"             # 01과 동일 (모듈명 확정 필요)
-CLIENT_CLASS = "OpenScenarioClientAPI"   # 01과 동일 (문서 확인됨)
-
+PKG_ROOT = os.environ.get(
+    "MORAI_OSC_API",
+    os.path.expanduser("~/avstack/morai/scenario_runner/OpenSCENARIO_API_22.R3"),
+)
 SR_HOST = "127.0.0.1"
-SR_PORT = 7789
-
-# TODO(사용자 확정): Qt 바인딩. Scenario Runner 번들은 PySide2(Qt 5.15) 기반이므로
-#   기본값 PySide2. 시스템에 PyQt5만 있으면 "PyQt5"로 바꾼다.
-QT_BINDING = "PySide2"         # "PySide2" | "PyQt5"
-# ============================================================================
+SR_PORT = "7789"
 
 
 def log(tag, msg):
     print(f"[{tag}] {msg}", flush=True)
 
 
-def not_configured():
-    if API_MODULE == "TODO_module" or CLIENT_CLASS == "TODO_Client":
-        log("ABORT", "API import 경로가 미확정(TODO). 01과 동일하게 채운 뒤 실행하라.")
-        return True
-    return False
+def check_py():
+    v = sys.version_info
+    log("INFO", f"python {v.major}.{v.minor}.{v.micro} @ {sys.executable}")
+    if (v.major, v.minor) != (3, 7):
+        log("WARN", "이 API는 Python 3.7.3 전용(sourcedefender 잠금). 3.7 venv에서 실행하라.")
 
 
-def import_qcore():
-    if QT_BINDING == "PySide2":
-        from PySide2.QtCore import QCoreApplication, QTimer
-    elif QT_BINDING == "PyQt5":
-        from PyQt5.QtCore import QCoreApplication, QTimer
-    else:
-        raise RuntimeError(f"알 수 없는 QT_BINDING={QT_BINDING!r}")
-    log("OK", f"import {QT_BINDING}.QtCore.QCoreApplication")
-    return QCoreApplication, QTimer
-
-
-def import_client():
-    if API_SRC_DIR:
-        sys.path.insert(0, API_SRC_DIR)
-        log("INFO", f"sys.path += {API_SRC_DIR}")
-    mod = __import__(API_MODULE, fromlist=[CLIENT_CLASS])
-    cls = getattr(mod, CLIENT_CLASS)
-    log("OK", f"import {API_MODULE}.{CLIENT_CLASS} = {cls}")
-    return cls
-
-
-def build_client(cls):
-    # 01_connect_no_qt.py와 동일: OpenScenarioClientAPI(host=, port="7789", ...). port는 문자열.
-    return cls(host=SR_HOST, port=str(SR_PORT))
-
-
-def call(label, fn):
-    try:
-        r = fn()
-        log("RESULT", f"{label} -> {r!r}")
-        return r
-    except Exception as e:  # noqa: BLE001
-        log("EXCEPTION", f"{label} -> {type(e).__name__}: {e}")
-        traceback.print_exc()
-        return None
-
-
-def run_experiment(cls):
-    client = call("build_client", lambda: build_client(cls))
-    if client is None:
-        log("FAIL", "client 생성 실패 — 생성자 시그니처 확인 필요")
-        return 1
-    call("is_connected()", lambda: client.is_connected())
-    call("get_simulator_version()", lambda: client.get_simulator_version())
-    call("get_available_map()", lambda: client.get_available_map())
+def run_smoke():
+    """01과 동일한 import+생성 스모크. 이벤트 루프 안에서 호출된다."""
+    import sourcedefender  # noqa: F401
+    log("OK", "import sourcedefender")
+    from open_scenario_importer_wrapper import OpenScenarioImporterWrapper  # noqa: F401
+    from open_scenario_client_wrapper import OpenScenarioClientWrapper
+    log("OK", "import wrappers")
+    client = OpenScenarioClientWrapper(SR_HOST, SR_PORT)
+    log("RESULT", f"OpenScenarioClientWrapper({SR_HOST!r}, {SR_PORT!r}) -> {client!r}")
+    log("RESULT", f"get_stop_status() -> {client.get_stop_status()!r}")
     return 0
 
 
 def main():
-    log("START", "Experiment 2 (QCoreApplication event loop)")
-    if not_configured():
+    log("START", "Experiment 2 (QApplication event loop) — OpenScenarioClientWrapper")
+    check_py()
+
+    if not os.path.isdir(PKG_ROOT):
+        log("ABORT", f"패키지 경로 없음: {PKG_ROOT} (MORAI_OSC_API로 재지정)")
         return 3
+    sys.path.insert(0, PKG_ROOT)
+    log("INFO", f"sys.path += {PKG_ROOT}")
+
     try:
-        QCoreApplication, QTimer = import_qcore()
-        cls = import_client()
+        from PyQt5.QtWidgets import QApplication
+        from PyQt5.QtCore import QTimer
+        log("OK", "import PyQt5 QApplication")
     except Exception as e:  # noqa: BLE001
-        log("EXCEPTION", f"import -> {type(e).__name__}: {e}")
+        log("EXCEPTION", f"import PyQt5 -> {type(e).__name__}: {e}")
         traceback.print_exc()
         return 2
 
-    app = QCoreApplication(sys.argv)
+    app = QApplication(sys.argv)
     rc_box = {"rc": 1}
 
     def deferred():
-        # 이벤트 루프가 살아있는 상태에서 API 호출 후 루프 종료
         try:
-            rc_box["rc"] = run_experiment(cls)
+            rc_box["rc"] = run_smoke()
+        except Exception as e:  # noqa: BLE001
+            log("EXCEPTION", f"smoke -> {type(e).__name__}: {e}")
+            traceback.print_exc()
+            rc_box["rc"] = 1
         finally:
             app.quit()
 
     QTimer.singleShot(0, deferred)
-    app.exec_()  # 이벤트 루프 진입 (PySide2/PyQt5 공통 exec_)
-    log("DONE", f"Experiment 2 완료 rc={rc_box['rc']} — RESULT/EXCEPTION을 api_contract.md에 옮긴다")
+    app.exec_()
+    log("DONE", f"Experiment 2 완료 rc={rc_box['rc']} — 결과를 api_contract.md에 기록")
     return rc_box["rc"]
 
 

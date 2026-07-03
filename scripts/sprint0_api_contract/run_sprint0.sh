@@ -17,19 +17,22 @@ export __NV_PRIME_RENDER_OFFLOAD=1
 export __VK_LAYER_NV_optimus=NVIDIA_only
 export __GLX_VENDOR_LIBRARY_NAME=nvidia
 
-PY="${PYTHON:-python3}"
+# 이 API는 Python 3.7.3 전용(sourcedefender 잠금). 3.7 인터프리터를 우선 사용한다.
+PY="${PYTHON:-python3.7}"
+export MORAI_OSC_API="${MORAI_OSC_API:-$HOME/avstack/morai/scenario_runner/OpenSCENARIO_API_22.R3}"
 
 {
   echo "==================================================================="
-  echo " Sprint0 / Stage 03.5 — Scenario Runner Python API 계약 검증"
+  echo " Sprint0 / Stage 03.5 — OpenSCENARIO API(22.R3) 계약 검증"
   echo "==================================================================="
   echo "[preflight] 실행 전 아래를 확인하라:"
-  echo "  1) MORAI SIM 실행 중이고 지도 로드 완료"
-  echo "     (scripts/run_morai_launcher_nvidia.sh 로 기동)"
+  echo "  1) MORAI SIM 실행 중이고 지도 로드 완료 (scripts/run_morai_launcher_nvidia.sh)"
   echo "  2) Scenario Runner 실행 중 (SIM flow 경유), gRPC 포트 7789 대기"
-  echo "  3) 01/02 스크립트 상단 TODO(import 경로: API_MODULE/CLIENT_CLASS/API_SRC_DIR) 확정 완료"
-  echo "     — step1 확인: 현재 설치본엔 API 미동봉. 별도 API 패키지 확보 후 채울 것."
-  echo "  4) python=$PY"
+  echo "  3) **Python 3.7.3 환경** — 암호화 lib이 3.7에 잠김. PYTHON 환경변수로 3.7 지정 가능."
+  echo "  4) 의존성 설치됨: sourcedefender, PyQt5, numpy==1.19.1, grpcio, grpcio-tools 등"
+  echo "  5) API 패키지 경로: MORAI_OSC_API=$MORAI_OSC_API"
+  echo "  6) python=$PY"
+  "$PY" --version 2>&1 | sed 's/^/       /' || echo "       [WARN] $PY 없음 — 3.7.3 venv 구성 후 PYTHON=<경로> 로 재실행"
   echo "[log] $LOG"
   echo
 

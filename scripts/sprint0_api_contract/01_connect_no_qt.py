@@ -1,100 +1,85 @@
-#!/usr/bin/env python3
-"""Stage 03.5 / Sprint 0 — Experiment 1: Scenario Runner Python API WITHOUT QApplication.
+#!/usr/bin/env python3.7
+"""Stage 03.5 / Sprint 0 — Experiment 1: OpenSCENARIO API (22.R3) 연결 스모크, QApplication 없이.
 
-integrated_roadmap.md 4장 참조. QApplication 이벤트 루프 없이 client를 생성하고
-is_connected() -> get_simulator_version() -> get_available_map() 를 호출하여
-각 결과/예외를 stdout에 구조화해 기록한다. 성공하면 "Qt 불필요" 판정 근거가 된다.
+실측 대상 = 실제 설치된 API 패키지의 `OpenScenarioClientWrapper`.
+  경로: ~/avstack/morai/scenario_runner/OpenSCENARIO_API_22.R3 (MORAI_OSC_API로 재지정 가능)
+  ※ 문서(scenario-runner-kr)의 `OpenScenarioClientAPI` + is_connected/get_simulator_version/
+     get_available_map 는 이 22.R3 패키지에 **존재하지 않는다**(문서-실물 불일치, api_contract.md 4장).
 
-실행은 사용자가 SIM+Runner를 켠 상태에서 직접 한다 (run_sprint0.sh 경유).
+요구 사항 (중요):
+  - **Python 3.7.3 전용** — lib이 sourcedefender로 암호화되어 파이썬 버전에 잠김. 3.7 아니면 import 실패.
+  - 의존성: sourcedefender, PyQt5, numpy(1.19.1), grpcio/grpcio-tools 등.
+  - 실행은 사용자가 SIM+Runner(gRPC 7789)를 켠 상태에서 run_sprint0.sh 경유로 직접 한다.
+
+main.py 예제는 QApplication을 만들지 않고 QObject + busy-wait로 동작한다 → 본 실험(=QApplication 없음)이
+문서화된 정상 경로다. 실패하면 02_connect_qcore.py(QApplication)로 넘어간다.
 """
+import os
 import sys
 import traceback
 
-# ============================================================================
-# TODO(사용자 확정): API import 경로.
-#   Stage 03.5 step1 결과 = 현재 설치본에 API 모듈이 동봉돼 있지 않음
-#   (Scenario Runner는 PyInstaller 프리즈 바이너리만 존재).
-#   MORAI에서 별도 배포되는 Scenario Runner Python API를 받은 뒤 아래를 채운다.
-#     - 동봉 모듈형: API_SRC_DIR 에 모듈 폴더 경로 지정 (sys.path에 추가됨)
-#     - pip 패키지형: 먼저 `pip install <패키지>`, API_SRC_DIR 은 빈 값 유지
-#   API_MODULE / CLIENT_CLASS 는 실제 모듈명·클래스명으로 바꾼다.
-# ----------------------------------------------------------------------------
-API_SRC_DIR  = ""                        # 다운로드한 SR API lib 폴더 경로 (예: "$HOME/avstack/morai/scenario_runner")
-API_MODULE   = "TODO_module"             # TODO: API가 들어있는 모듈명 (다운로드 후 확정)
-CLIENT_CLASS = "OpenScenarioClientAPI"   # 문서 확인됨(2026-07-03). 모듈명(API_MODULE)만 확정 필요
-
-# 연결 파라미터 (Stage 03에서 관측 = gRPC localhost:7789). 문서상 port는 문자열.
-# 의존성: grpcio(SIM API 가이드 기준 1.44.0), grpcio-tools 1.44.0 필요할 수 있음.
+# 실제 패키지 경로 (환경변수로 재지정 가능)
+PKG_ROOT = os.environ.get(
+    "MORAI_OSC_API",
+    os.path.expanduser("~/avstack/morai/scenario_runner/OpenSCENARIO_API_22.R3"),
+)
+# 연결 파라미터 (문서/예제: ip str, port str). SIM+Runner가 이 포트에서 대기해야 함.
 SR_HOST = "127.0.0.1"
-SR_PORT = 7789
-
-# 클라이언트 생성 방식도 문서 확인 후 확정한다. 아래 build_client()의 TODO 참조.
-# ============================================================================
+SR_PORT = "7789"
 
 
 def log(tag, msg):
     print(f"[{tag}] {msg}", flush=True)
 
 
-def not_configured():
-    if API_MODULE == "TODO_module" or CLIENT_CLASS == "TODO_Client":
-        log("ABORT", "API import 경로가 미확정(TODO). 상단 API_MODULE/CLIENT_CLASS를 "
-                     "실제 값으로 채운 뒤 다시 실행하라. (step1: 설치본에 API 미동봉)")
-        return True
-    return False
-
-
-def import_client():
-    if API_SRC_DIR:
-        sys.path.insert(0, API_SRC_DIR)
-        log("INFO", f"sys.path += {API_SRC_DIR}")
-    mod = __import__(API_MODULE, fromlist=[CLIENT_CLASS])
-    cls = getattr(mod, CLIENT_CLASS)
-    log("OK", f"import {API_MODULE}.{CLIENT_CLASS} = {cls}")
-    return cls
-
-
-def build_client(cls):
-    # 문서 확인된 시그니처(2026-07-03):
-    #   OpenScenarioClientAPI(host="127.0.0.1", port="7789",
-    #                         user_start_callback_func=None, user_stop_callback_func=None)
-    # 주의: port는 문자열. 실제 동작이 다르면 여기만 고친다.
-    return cls(host=SR_HOST, port=str(SR_PORT))
-
-
-def call(label, fn):
-    """fn()을 실행하고 결과 또는 예외를 기록한다. 예외는 삼키고 계속 진행한다."""
-    try:
-        r = fn()
-        log("RESULT", f"{label} -> {r!r}")
-        return r
-    except Exception as e:  # noqa: BLE001 — 계약 실측이 목적이므로 모든 예외 관찰
-        log("EXCEPTION", f"{label} -> {type(e).__name__}: {e}")
-        traceback.print_exc()
-        return None
+def check_py():
+    v = sys.version_info
+    log("INFO", f"python {v.major}.{v.minor}.{v.micro} @ {sys.executable}")
+    if (v.major, v.minor) != (3, 7):
+        log("WARN", "이 API는 Python 3.7.3 전용(sourcedefender 잠금). "
+                    "3.7이 아니면 아래 import가 실패할 것이다 → 3.7.3 venv에서 재실행하라.")
 
 
 def main():
-    log("START", "Experiment 1 (no QApplication)")
-    if not_configured():
+    log("START", "Experiment 1 (no QApplication) — OpenScenarioClientWrapper")
+    check_py()
+
+    if not os.path.isdir(PKG_ROOT):
+        log("ABORT", f"패키지 경로 없음: {PKG_ROOT} (MORAI_OSC_API로 재지정)")
         return 3
+    sys.path.insert(0, PKG_ROOT)
+    log("INFO", f"sys.path += {PKG_ROOT}")
+
+    # sourcedefender: 암호화된 .pye lib을 로드 가능하게 하는 런타임. import 순서상 lib보다 먼저.
     try:
-        cls = import_client()
+        import sourcedefender  # noqa: F401
+        log("OK", "import sourcedefender")
     except Exception as e:  # noqa: BLE001
-        log("EXCEPTION", f"import -> {type(e).__name__}: {e}")
+        log("EXCEPTION", f"import sourcedefender -> {type(e).__name__}: {e}")
         traceback.print_exc()
         return 2
 
-    client = call("build_client", lambda: build_client(cls))
-    if client is None:
-        log("FAIL", "client 생성 실패 — 생성자 시그니처(build_client TODO) 확인 필요")
+    try:
+        from open_scenario_importer_wrapper import OpenScenarioImporterWrapper  # noqa: F401
+        from open_scenario_client_wrapper import OpenScenarioClientWrapper
+        log("OK", "import OpenScenarioImporterWrapper, OpenScenarioClientWrapper")
+    except Exception as e:  # noqa: BLE001
+        log("EXCEPTION", f"import wrappers -> {type(e).__name__}: {e}")
+        traceback.print_exc()
+        return 2
+
+    # 클라이언트 생성 (시나리오는 시작하지 않는다 — 계약 검증용 스모크).
+    try:
+        client = OpenScenarioClientWrapper(SR_HOST, SR_PORT)
+        log("RESULT", f"OpenScenarioClientWrapper({SR_HOST!r}, {SR_PORT!r}) -> {client!r}")
+        # get_stop_status(): 내부 client.is_start 반환 — 시작 전 초기값 관찰 (경계 감지 신호 후보)
+        log("RESULT", f"get_stop_status() -> {client.get_stop_status()!r}")
+    except Exception as e:  # noqa: BLE001
+        log("EXCEPTION", f"client 생성/조회 -> {type(e).__name__}: {e}")
+        traceback.print_exc()
         return 1
 
-    call("is_connected()", lambda: client.is_connected())
-    call("get_simulator_version()", lambda: client.get_simulator_version())
-    call("get_available_map()", lambda: client.get_available_map())
-
-    log("DONE", "Experiment 1 완료 — 위 RESULT/EXCEPTION 라인을 api_contract.md에 옮긴다")
+    log("DONE", "Experiment 1 완료 — QApplication 없이 생성 성공 여부를 api_contract.md에 기록")
     return 0
 
 
