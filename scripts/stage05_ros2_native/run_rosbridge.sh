@@ -7,9 +7,11 @@ set -euo pipefail
 WS="${AVSTACK_WS:-$HOME/avstack/ros2_ws}"
 PORT="${ROSBRIDGE_PORT:-9090}"
 
+set +u  # ROS setup.bash 는 nounset 하에서 AMENT_TRACE_SETUP_FILES 등 미정의 변수 참조
 source /opt/ros/humble/setup.bash
 [ -f "$WS/install/setup.bash" ] && source "$WS/install/setup.bash" || \
   echo "[WARN] $WS/install/setup.bash 없음 — morai_ros2_msgs 미빌드? (토픽은 뜨나 타입 미해석 가능)"
+set -u
 export ROS_LOCALHOST_ONLY=0   # CLAUDE.md: 1 금지
 
 if ! ros2 pkg prefix rosbridge_server >/dev/null 2>&1; then

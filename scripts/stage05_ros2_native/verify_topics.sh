@@ -10,8 +10,10 @@ OFFSET_TYPE="${OFFSET_TYPE:-EgoVehicleStatus}"
 COUNT="${OFFSET_COUNT:-50}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
 
+set +u  # ROS setup.bash 는 nounset 하에서 미정의 변수 참조
 source /opt/ros/humble/setup.bash
 [ -f "$WS/install/setup.bash" ] && source "$WS/install/setup.bash"
+set -u
 export ROS_LOCALHOST_ONLY=0
 
 TS=$(date +%Y%m%d_%H%M%S)
