@@ -30,8 +30,8 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 - 03 Example XOSC Built-in: PASS (KATRI+Cut_In_1, Built-in ego 주행 확인. SR GUI는 검게 렌더돼 블라인드 조작 — AVS-004)
 - **다음: 03.5 Python API 계약 검증** — **BLOCKED (AVS-006)**. 실물 API=OpenSCENARIO API 22.R3(`~/avstack/morai/scenario_runner`), Python 3.7.3 env(miniconda morai-osc) 구성 완료. sourcedefender 3.7 런타임 확보 불가로 보류(MORAI 문의 대기). AVS-001 RESOLVED.
 - 03.7 API 단일 실행 + 경계 감지: TODO (**게이트**)
-- 04 ROS2 Humble Host: TODO (03.5와 병렬 가능)
-- 05 MORAI ROS2 Native Topic: TODO
+- 04 ROS2 Humble Host: PASS (desktop 273 pkg, talker→/chatter echo --once 수신, RMW=fastrtps, ROS_LOCALHOST_ONLY=0)
+- 05 MORAI ROS2 Native Topic: TODO ← 다음 (04 완료)
 - 05.5 Built-in Batch 파이프라인: TODO (**Autoware 전 필수**)
 - 05.7 재현성 캘리브레이션 + Multi-Map: TODO
 - 06~08 Autoware/Mapping/Closed-loop: 보류 (05.7 통과 후)
