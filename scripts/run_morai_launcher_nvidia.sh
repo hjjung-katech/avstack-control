@@ -36,6 +36,12 @@ if [ "${SOURCE_ROS2:-0}" = "1" ] && [ -f /opt/ros/humble/setup.bash ]; then
   export RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}"
   export ROS_LOCALHOST_ONLY=0
   echo "[WARN] SOURCE_ROS2=1 — ROS2 소싱함. AVS-007(ABI) 미해결 시 SIM startup 실패 가능." >&2
+  # AVS-007 #2: FASTDDS_PREFIX 를 앞세워 SIM 만 SIM-빌드시점(2023) Fast-DDS 를 쓰게 함
+  # (시스템 /opt/ros/humble 은 그대로, LD_LIBRARY_PATH 우선순위로 libfastrtps 등만 오버라이드).
+  if [ -n "${FASTDDS_PREFIX:-}" ] && [ -d "$FASTDDS_PREFIX/opt/ros/humble/lib" ]; then
+    export LD_LIBRARY_PATH="$FASTDDS_PREFIX/opt/ros/humble/lib:${LD_LIBRARY_PATH:-}"
+    echo "[INFO] AVS-007 #2: fastdds prefix 앞세움 → $FASTDDS_PREFIX"
+  fi
 fi
 
 MORAI_DIR="${MORAI_DIR:-$HOME/avstack/morai/launcher/MoraiLauncher_Lin}"
