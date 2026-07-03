@@ -13,9 +13,9 @@ import traceback
 # ============================================================================
 # TODO(사용자 확정): 01_connect_no_qt.py 상단과 동일하게 채운다 (같은 값 사용).
 # ----------------------------------------------------------------------------
-API_SRC_DIR  = ""              # 01과 동일
-API_MODULE   = "TODO_module"   # 01과 동일
-CLIENT_CLASS = "TODO_Client"   # 01과 동일
+API_SRC_DIR  = ""                        # 01과 동일 (다운로드한 SR API lib 폴더)
+API_MODULE   = "TODO_module"             # 01과 동일 (모듈명 확정 필요)
+CLIENT_CLASS = "OpenScenarioClientAPI"   # 01과 동일 (문서 확인됨)
 
 SR_HOST = "127.0.0.1"
 SR_PORT = 7789
@@ -59,8 +59,8 @@ def import_client():
 
 
 def build_client(cls):
-    # 01_connect_no_qt.py의 build_client와 동일 규약 유지.
-    return cls(SR_HOST, SR_PORT)
+    # 01_connect_no_qt.py와 동일: OpenScenarioClientAPI(host=, port="7789", ...). port는 문자열.
+    return cls(host=SR_HOST, port=str(SR_PORT))
 
 
 def call(label, fn):

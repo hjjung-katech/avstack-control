@@ -19,11 +19,12 @@ import traceback
 #     - pip 패키지형: 먼저 `pip install <패키지>`, API_SRC_DIR 은 빈 값 유지
 #   API_MODULE / CLIENT_CLASS 는 실제 모듈명·클래스명으로 바꾼다.
 # ----------------------------------------------------------------------------
-API_SRC_DIR  = ""              # 예: "/home/hjjung/avstack/morai/scenario_runner_api"
-API_MODULE   = "TODO_module"   # 예: "scenario_runner" / "morai" ...
-CLIENT_CLASS = "TODO_Client"   # 예: "ScenarioRunner" / "Client" ...
+API_SRC_DIR  = ""                        # 다운로드한 SR API lib 폴더 경로 (예: "$HOME/avstack/morai/scenario_runner")
+API_MODULE   = "TODO_module"             # TODO: API가 들어있는 모듈명 (다운로드 후 확정)
+CLIENT_CLASS = "OpenScenarioClientAPI"   # 문서 확인됨(2026-07-03). 모듈명(API_MODULE)만 확정 필요
 
-# 연결 파라미터 (Stage 03에서 관측된 gRPC 포트 = 7789)
+# 연결 파라미터 (Stage 03에서 관측 = gRPC localhost:7789). 문서상 port는 문자열.
+# 의존성: grpcio(SIM API 가이드 기준 1.44.0), grpcio-tools 1.44.0 필요할 수 있음.
 SR_HOST = "127.0.0.1"
 SR_PORT = 7789
 
@@ -54,11 +55,11 @@ def import_client():
 
 
 def build_client(cls):
-    # TODO(사용자 확정): 생성자 시그니처는 문서/예제로 확정.
-    #   후보 A: cls(SR_HOST, SR_PORT)
-    #   후보 B: c = cls(); c.connect(SR_HOST, SR_PORT)
-    # 아래는 후보 A 기본값. 다르면 여기만 고친다.
-    return cls(SR_HOST, SR_PORT)
+    # 문서 확인된 시그니처(2026-07-03):
+    #   OpenScenarioClientAPI(host="127.0.0.1", port="7789",
+    #                         user_start_callback_func=None, user_stop_callback_func=None)
+    # 주의: port는 문자열. 실제 동작이 다르면 여기만 고친다.
+    return cls(host=SR_HOST, port=str(SR_PORT))
 
 
 def call(label, fn):

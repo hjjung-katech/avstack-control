@@ -13,8 +13,10 @@ Stage 03.5 산출물. `runbooks/integrated_roadmap.md` 4장 / `runbooks/stage03_
 |---|---|---|
 | Scenario Runner 버전 | v1.7.0 (linux) | 설치 경로 `scenario_runner_v1.7.0_linux` |
 | Simulator 버전 | `<get_simulator_version() 결과>` | 실측 |
-| API 패키지 출처/버전 | `<pip 패키지명@버전 또는 동봉 경로>` | step1: 설치본 미동봉, 별도 확보 |
-| Python | `<python3 --version>` | 실측 |
+| API 패키지 출처/버전 | `<OpenSCENARIO_API_*.zip (26.R1) 해제 경로>` | pip/GitHub 미제공, 계정 다운로드 |
+| 암호 해제 런타임 | `<sourcedefender / pyconcrete + 버전>` | 암호화 lib 필수 의존 |
+| grpcio / grpcio-tools | `<패키지 requirements 실측>` | 문서 1.39.0~1.44.0 릴리스별 상이 |
+| Python | `<python3 --version>` | 암호화 lib 버전 잠금 주의(3.7.3? 3.10?) |
 | Qt 바인딩 | `<PySide2 x.y / PyQt5 x.y / 미사용>` | 실측 |
 | gRPC host:port | 127.0.0.1:7789 | Stage 03 관측 |
 | API import 경로 | `API_MODULE=<...>  CLIENT_CLASS=<...>  API_SRC_DIR=<...>` | 스크립트 상단 확정값 |
@@ -29,13 +31,18 @@ Stage 03.5 산출물. `runbooks/integrated_roadmap.md` 4장 / `runbooks/stage03_
 
 ## 3. 함수별 실측 표
 
-| 함수 | 인자 | 반환(실측) | 예외(실측) | 비고 |
+문서(help-morai-sim) 기준선은 아래와 같다. 실측으로 반환/예외를 채우고 불일치는 4장에 기록.
+- 클래스: `OpenScenarioClientAPI`
+- 생성자: `OpenScenarioClientAPI(host="127.0.0.1", port="7789", user_start_callback_func=None, user_stop_callback_func=None)` (port는 문자열)
+
+| 함수 | 인자(문서) | 반환(실측) | 예외(실측) | 비고 |
 |---|---|---|---|---|
-| `<Client 생성자>` | `<host, port ...>` | `<...>` | `<...>` | 생성 방식(A: cls(h,p) / B: connect()) |
+| `OpenScenarioClientAPI(...)` | host, port, user_start_callback_func, user_stop_callback_func | `<...>` | `<...>` | port=str |
 | `is_connected()` | — | `<...>` | `<...>` | |
 | `get_simulator_version()` | — | `<...>` | `<...>` | |
 | `get_available_map()` | — | `<...>` | `<...>` | |
-| `<추가 함수>` | `<...>` | `<...>` | `<...>` | |
+| `set_scenario_config(...)` | `<문서 확인>` | `<...>` | `<...>` | 03.7에서 사용 |
+| `start_batch_scenario()` | — | `<...>` | `<...>` | 03.7에서 사용 |
 
 ## 4. 문서-실동작 불일치 목록
 
