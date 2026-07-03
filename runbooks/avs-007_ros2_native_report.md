@@ -55,12 +55,24 @@
 3. ros2cs 를 **standalone=1(자체포함) 빌드**로 제공할 수 있는가? (host 버전 의존 제거)
 4. 공식 매뉴얼의 ROS2 Native 설치 절차(요구 버전·RMW·설정)를 알려달라. (help-morai-sim ROS2 페이지 링크 포함)
 
-## 5. 다음 단계 (권장 순서, #2 실험 후 갱신)
-1. **[주 경로] rosbridge 로 Stage 05 진행** — native 가 MORAI 측 이슈(H2/H3)로 막혔으므로, ABI 무관한
-   rosbridge 로 토픽/offset 을 확보해 Stage 05 를 실질 통과시킨다(§6-B, `run_rosbridge.sh`).
-2. **[문의] MORAI 에 native 지원 요청** — §4 질문(특히 **standalone ros2cs 빌드** 또는 Linux 에서
-   ros2cs 로드 시 `librmw_fastrtps_cpp std::bad_cast` 회피 절차). 버전 정합은 실험으로 배제됨을 첨부.
-3. **[보류] host ROS2 버전 정합** — **#2 실험으로 무효 확인됨**. 재시도 불필요(H1 반증).
+### 3-2. rosbridge 경로 실측 (2026-07-03) — 연결 OK, **데이터 포맷 불일치로 차단**
+- Simulator/Ego/Sensor 를 ROS(bridge)/9090 으로 연결(client_count 32). `morai_msgs` ROS2 패키지
+  빌드로 타입 해결 → rosbridge 가 /Ego_topic·/gps 등 대량 토픽 **생성(advertise)**.
+- **그러나 데이터 0.** rosbridge 가 SIM publish 를 **필드 불일치로 전부 거부**:
+  `morai_msgs/EgoVehicleStatus does not have a field ...`, **`tf2_msgs/TFMessage does not have a field
+  transform`**(표준 타입까지!). → SIM ROS-bridge 직렬화가 현 rosbridge_suite(ROS2 2.0.7)와 불일치.
+- **∴ rosbridge 도 이 환경(2026 host)에서 데이터 전달 불가.** native(ABI)와 함께 **두 경로 모두 차단**.
+
+## 5. 다음 단계 (양 경로 실측 후 갱신)
+**핵심**: MORAI 26.R1.H3 ↔ host Humble/rosbridge_suite(둘 다 2026) 버전 불일치로 native·rosbridge 모두 차단.
+근본 해결은 MORAI 지원 필요.
+1. **[주 경로] MORAI 문의** — §4 + 다음 추가:
+   - native: standalone ros2cs 빌드 또는 `librmw_fastrtps_cpp std::bad_cast` 회피 절차(버전정합은 반증 첨부).
+   - rosbridge: SIM 이 기대하는 **rosbridge_suite 버전** 또는 26.R1.H3 에 정합하는 **morai_msgs/msg 정의 세트**.
+   - 또는 26.R1.H3 검증된 **완전한 ROS2 연동 환경(권장 OS/ROS2 버전/docker)**.
+2. **[탐색·선택] 호환 조합 실험(원하면)** — (a) 구버전 rosbridge_suite 로 관용 검증, (b) SIM 버전에 맞는
+   morai_msgs 필드 정의로 재빌드(단 표준 tf 불일치는 잔존). 성공 불확실, 시간 소요.
+3. **[보류] host ROS2 버전 정합** — #2 실험으로 무효(H1 반증). 재시도 불필요.
 
 ## 부록 — 증거 파일
 - `~/avstack/logs/avs007_ros2cs_abi_mismatch_20260703.md` (원 증거: metadata/ldd/Player.log/버전)
