@@ -18,13 +18,19 @@ Scenario Runner  ──(gRPC, 7789)──▶  MORAI SIM: Drive 26.R1  ──(ROS
 - SIM 은 `Simulator_v.R1.260701.H3`, `libros2cs_native.so` 내장(ROS2ForUnity). 외부 relay 불필요.
 - ⚠️ **폐기된 접근**: rosbridge(9090) + `/client_count` 진단은 구버전 방식. 26.R1 에서는 지표 아님.
 
-### ⚠️ 함정 1 — SIM 실행 셸에 ROS2 를 source 하면 Connect 가 실패한다 (실측)
-SIM 내장 ros2cs 는 자체 ROS2 라이브러리를 쓴다. 실행 셸에 `/opt/ros/humble` 이 source 돼 있으면
-(예: `~/.bashrc` 자동 소싱) `LD_LIBRARY_PATH` 충돌로 native `rcl` 로드가 실패한다.
+### ⚠️ 함정 1 — SIM 실행 환경에 ROS2 가 있으면 Connect 가 실패한다 (실측)
+SIM 내장 ros2cs 는 자체 ROS2 라이브러리를 쓴다. 환경에 `/opt/ros/humble` 이 있으면
+`LD_LIBRARY_PATH` 충돌로 native `rcl` 로드가 실패한다.
 - Player.log 증거: `ROS2 version in 'ros2cs' metadata doesn't match currently sourced version`
   → `TypeInitializationException: ROS2.NativeRcl` → `MoraiCmdController.Ros2Connect()` → Connect 실패.
-- **대응**: SIM 은 반드시 **ROS2 미소싱 환경**에서 실행. `scripts/run_morai_launcher_nvidia.sh` 가
-  실행 전 `/opt/ros`·`ros2_ws` 경로와 ROS 변수를 subshell 한정으로 제거한다(자동). → 이 래퍼로만 실행.
+- **재주입 경로(핵심)**: MORAI Launcher 는 Simulator 를 **`~/.bashrc` 를 읽는 셸로 spawn** 한다.
+  `.bashrc` 가 ROS2 를 auto-source 하면, 래퍼가 launcher 환경을 아무리 청소해도 SIM 프로세스에
+  ROS 가 되살아난다. (검증: launcher /proc environ ROS 0개인데 Simulator environ 에 AMENT/ROS_DISTRO 존재.)
+- **대응(2중 방어)**:
+  1. `~/.bashrc` 는 ROS2 를 **auto-source 하지 않는다**. 대신 `rosenv` 함수로 필요할 때만 수동 소싱.
+     → 기본 셸이 ROS-free → launcher 의 SIM-spawn 도 clean.
+  2. `scripts/run_morai_launcher_nvidia.sh` 가 실행 전 `/opt/ros`·`ros2_ws` 경로/ROS 변수를 subshell
+     한정 제거(rosenv 로 소싱한 터미널에서 실행해도 안전). → **SIM 은 이 래퍼로만 실행**.
 
 ### ⚠️ 함정 2 — RMW 벤더는 FastDDS 여야 한다 (CycloneDDS 아님)
 SIM Plugins 의 typesupport 는 **fastrtps 303개 / cyclonedds 0개** → SIM 은 FastDDS 로 퍼블리시한다.
