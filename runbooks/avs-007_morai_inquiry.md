@@ -28,10 +28,12 @@
   토픽 생성됨(/Ego_topic 등). **그러나 데이터가 하나도 수신 안 됨.**
 - rosbridge_server(ros-humble-rosbridge-suite 2.0.7) 로그: SIM의 publish를 **필드 불일치로 전부 거부**:
   ```
-  [id:/Ego_topic] publish: Message type morai_msgs/EgoVehicleStatus does not have a field ...
-  [id:/tf]        publish: Message type tf2_msgs/TFMessage does not have a field transform
+  [id:/Ego_topic] publish: Message type morai_msgs/EgoVehicleStatus does not have a field header.seq
+  [id:/tf]        publish: Message type tf2_msgs/TFMessage does not have a field transforms.header.seq
   ```
-  표준 `tf2_msgs/TFMessage`까지 걸림(SIM이 `transform` 전송, 표준은 `transforms`).
+  누락 필드 = **`header.seq`**. 이는 **ROS1 `std_msgs/Header`의 `seq`**(ROS2에서 제거된 필드)입니다.
+  즉 **SIM의 ROS bridge가 ROS1 헤더(seq 포함) 포맷으로 발행**하여 ROS2 rosbridge_suite가 거부합니다.
+  → ROS2 환경에서 rosbridge로 쓰려면 SIM이 **ROS2 헤더(seq 없음)로 발행**하도록 옵션이 필요합니다.
 
 ## 질문
 1. 26.R1.H3의 ROS2 Native(ros2cs)를 Linux/Humble에서 사용하려면 **정확히 어떤 환경**이 필요합니까?

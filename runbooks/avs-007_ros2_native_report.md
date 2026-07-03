@@ -58,10 +58,16 @@
 ### 3-2. rosbridge 경로 실측 (2026-07-03) — 연결 OK, **데이터 포맷 불일치로 차단**
 - Simulator/Ego/Sensor 를 ROS(bridge)/9090 으로 연결(client_count 32). `morai_msgs` ROS2 패키지
   빌드로 타입 해결 → rosbridge 가 /Ego_topic·/gps 등 대량 토픽 **생성(advertise)**.
-- **그러나 데이터 0.** rosbridge 가 SIM publish 를 **필드 불일치로 전부 거부**:
-  `morai_msgs/EgoVehicleStatus does not have a field ...`, **`tf2_msgs/TFMessage does not have a field
-  transform`**(표준 타입까지!). → SIM ROS-bridge 직렬화가 현 rosbridge_suite(ROS2 2.0.7)와 불일치.
-- **∴ rosbridge 도 이 환경(2026 host)에서 데이터 전달 불가.** native(ABI)와 함께 **두 경로 모두 차단**.
+- **그러나 데이터 0.** rosbridge 가 SIM publish 를 필드 불일치로 전부 거부. **정밀 원인(전체 로그)**:
+  ```
+  morai_msgs/EgoVehicleStatus does not have a field header.seq
+  tf2_msgs/TFMessage        does not have a field transforms.header.seq
+  ```
+  누락 필드 = **`header.seq`** — ROS1 `std_msgs/Header` 의 `seq`(ROS2 에서 제거됨). MORAI ROS-bridge 가
+  **ROS1 헤더(seq 포함)** 로 전송 → ROS2 rosbridge_suite(2.0.7) 가 미지 필드로 엄격 거부.
+- **∴ 근본 포맷 불일치가 아니라 단일 `header.seq` 문제 → rosbridge 경로는 FIXABLE**(구버전 rosbridge
+  관용 / message_conversion 이 unknown 필드 무시하도록 패치 / seq strip). native(ABI, AVS-007)와 달리
+  rosbridge 는 우리 쪽 우회로 해결 가능성 높음(미시도).
 
 ## 5. 다음 단계 (양 경로 실측 후 갱신)
 **핵심**: MORAI 26.R1.H3 ↔ host Humble/rosbridge_suite(둘 다 2026) 버전 불일치로 native·rosbridge 모두 차단.
