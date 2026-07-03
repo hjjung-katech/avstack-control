@@ -25,27 +25,21 @@ if [ "${RUN_REMOTE:-0}" = "1" ]; then
   export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
 fi
 
-# ROS2 환경 격리 (필수): SIM은 ros2cs(ROS2ForUnity, FastDDS)를 내장한다. 실행 셸에 ROS2가
-# source돼 있으면(예: ~/.bashrc 자동 소싱, /opt/ros/humble) 내장 ros2cs가 /opt/ros 라이브러리와
-# 충돌해 Network Settings의 Connect가 실패한다.
-#   Player.log 증거: "ROS2 version in 'ros2cs' metadata doesn't match currently sourced version"
-#                    → TypeInitializationException: ROS2.NativeRcl → MoraiCmdController.Ros2Connect()
-# 따라서 SIM 프로세스는 반드시 ROS2 미소싱 환경에서 실행한다(아래 subshell 한정 정리).
-_strip_ros() {  # 콜론구분 PATH류에서 /opt/ros·ros2_ws 성분 제거
-  local out="" p; local IFS=:
-  for p in $1; do
-    case "$p" in */opt/ros/*|*/ros2_ws/*) ;; *) [ -n "$p" ] && out="${out:+$out:}$p" ;; esac
-  done
-  printf '%s' "$out"
-}
-if [ -n "${AMENT_PREFIX_PATH:-}${ROS_DISTRO:-}" ]; then
-  echo "[INFO] ROS2 환경 감지 → SIM 실행 전 격리(내장 ros2cs 충돌 방지)"
+# ROS2 Humble 소싱 (필수): SIM 내장 ros2cs 는 standalone=0(비자체포함, humble 타깃)이라
+# 실행 환경에 ROS2 Humble 이 있어야 librcl/librmw_implementation/librcutils 를 로드한다.
+# 없으면 Network Settings 의 ROS2 Connect 가 ros2cs NativeRcl 예외로 실패한다.
+#   근거: Simulator_Data/Plugins/metadata_ros2cs.xml → <ros2>humble</ros2> <standalone>0</standalone>
+#         env -i ldd libros2cs_native.so → librcl.so/librmw_implementation.so/librcutils.so not found,
+#         /opt/ros/humble/lib 을 얹으면 전부 해소(실측).
+#   dyn-loader 는 exec 시점의 LD_LIBRARY_PATH 를 고정하므로 반드시 실행 '전' 에 소싱한다.
+if [ -f /opt/ros/humble/setup.bash ]; then
+  set +u; source /opt/ros/humble/setup.bash; set -u
+  export RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}"  # SIM typesupport=fastrtps
+  export ROS_LOCALHOST_ONLY=0   # CLAUDE.md: 1 금지
+  echo "[INFO] ROS2 Humble sourced for SIM (ros2cs standalone=0 requires librcl 등)"
+else
+  echo "[WARN] /opt/ros/humble 없음 — ROS2 native Connect 불가(ros2cs 로드 실패 예상)" >&2
 fi
-export LD_LIBRARY_PATH="$(_strip_ros "${LD_LIBRARY_PATH:-}")"
-export PATH="$(_strip_ros "${PATH:-}")"
-export PYTHONPATH="$(_strip_ros "${PYTHONPATH:-}")"
-unset AMENT_PREFIX_PATH AMENT_CURRENT_PREFIX ROS_DISTRO ROS_VERSION ROS_PYTHON_VERSION \
-      RMW_IMPLEMENTATION ROS_LOCALHOST_ONLY COLCON_PREFIX_PATH CYCLONEDDS_URI 2>/dev/null || true
 
 MORAI_DIR="${MORAI_DIR:-$HOME/avstack/morai/launcher/MoraiLauncher_Lin}"
 BIN="MoraiLauncher_Lin.x86_64"
