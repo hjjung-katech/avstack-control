@@ -3,6 +3,20 @@
 작업 정의: `runbooks/integrated_roadmap.md` 3장 표(Stage 05) — **"topic 확인 + sim/wall clock offset 측정"** (V7 준비).
 선행: Stage 04 PASS(완료). 게이트 아님.
 
+## ⛔ 현재 블로커 — AVS-007 (ROS2 Native ABI 불일치, 2026-07-03)
+
+SIM ros2cs 는 **Humble 2023-03-31 빌드(standalone=0)**, host Humble 은 **2026-06 패치** →
+fastrtps/typesupport ABI 불일치. 결과:
+- ROS2 소싱(SOURCE_ROS2=1): SIM startup 에서 `librmw_fastrtps_cpp.so std::bad_cast` → SIM 종료.
+- 미소싱(기본): SIM 정상 시작하나 Connect 시 `librcl not found` → Disconnect 유지.
+→ **현재 host Humble 로는 native 불가.** 증거: `~/avstack/logs/avs007_ros2cs_abi_mismatch_20260703.md`.
+
+**대응 후보**: ① rosbridge 경로 우회(ros2cs/DDS ABI 안 탐, 이 환경에서 연결 실적 있음),
+② host ROS2 를 SIM 빌드시점(2023-03) 버전으로 정합, ③ MORAI 문의(정확한 Humble 패치/standalone 빌드).
+아래 native 절차는 AVS-007 해결 후 유효.
+
+---
+
 ## 0. 아키텍처 (26.R1 기준, 2026-07-03 재정렬)
 
 MORAI SIM 26.R1 은 **ROS2 Humble 을 native 지원**한다(rosbridge / morai_ros2_connector 불필요).

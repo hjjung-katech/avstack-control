@@ -25,20 +25,17 @@ if [ "${RUN_REMOTE:-0}" = "1" ]; then
   export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
 fi
 
-# ROS2 Humble 소싱 (필수): SIM 내장 ros2cs 는 standalone=0(비자체포함, humble 타깃)이라
-# 실행 환경에 ROS2 Humble 이 있어야 librcl/librmw_implementation/librcutils 를 로드한다.
-# 없으면 Network Settings 의 ROS2 Connect 가 ros2cs NativeRcl 예외로 실패한다.
-#   근거: Simulator_Data/Plugins/metadata_ros2cs.xml → <ros2>humble</ros2> <standalone>0</standalone>
-#         env -i ldd libros2cs_native.so → librcl.so/librmw_implementation.so/librcutils.so not found,
-#         /opt/ros/humble/lib 을 얹으면 전부 해소(실측).
-#   dyn-loader 는 exec 시점의 LD_LIBRARY_PATH 를 고정하므로 반드시 실행 '전' 에 소싱한다.
-if [ -f /opt/ros/humble/setup.bash ]; then
+# ROS2 소싱: 기본 OFF (SIM 이 정상 시작하려면 ROS2 미소싱이어야 한다).
+#  - SIM 내장 ros2cs 는 standalone=0(humble, 2023-03-31 빌드)이라 ROS2 Native Connect 에는
+#    host ROS2 Humble 이 필요하지만, host Humble(2026 패치)과 fastrtps ABI 가 달라 소싱 시
+#    startup 에서 `std::bad_cast`(librmw_fastrtps_cpp 로드 실패)로 SIM 이 즉시 종료한다. → AVS-007.
+#  - 따라서 기본은 소싱하지 않아 SIM 이 정상 시작하도록 둔다(ROS2 Native 는 AVS-007 해결 후).
+#  - SOURCE_ROS2=1 로 켜면 실험적으로 소싱한다(현재는 SIM startup 실패 예상).
+if [ "${SOURCE_ROS2:-0}" = "1" ] && [ -f /opt/ros/humble/setup.bash ]; then
   set +u; source /opt/ros/humble/setup.bash; set -u
-  export RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}"  # SIM typesupport=fastrtps
-  export ROS_LOCALHOST_ONLY=0   # CLAUDE.md: 1 금지
-  echo "[INFO] ROS2 Humble sourced for SIM (ros2cs standalone=0 requires librcl 등)"
-else
-  echo "[WARN] /opt/ros/humble 없음 — ROS2 native Connect 불가(ros2cs 로드 실패 예상)" >&2
+  export RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}"
+  export ROS_LOCALHOST_ONLY=0
+  echo "[WARN] SOURCE_ROS2=1 — ROS2 소싱함. AVS-007(ABI) 미해결 시 SIM startup 실패 가능." >&2
 fi
 
 MORAI_DIR="${MORAI_DIR:-$HOME/avstack/morai/launcher/MoraiLauncher_Lin}"
