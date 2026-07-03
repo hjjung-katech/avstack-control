@@ -31,7 +31,7 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 - **다음: 03.5 Python API 계약 검증** — **BLOCKED (AVS-006)**. 실물 API=OpenSCENARIO API 22.R3(`~/avstack/morai/scenario_runner`), Python 3.7.3 env(miniconda morai-osc) 구성 완료. sourcedefender 3.7 런타임 확보 불가로 보류(MORAI 문의 대기). AVS-001 RESOLVED.
 - 03.7 API 단일 실행 + 경계 감지: TODO (**게이트**)
 - 04 ROS2 Humble Host: PASS (desktop 273 pkg, talker→/chatter echo --once 수신, RMW=fastrtps, ROS_LOCALHOST_ONLY=0)
-- 05 MORAI ROS2 Native Topic: **BLOCKED (AVS-007)**. 연동방식=ros2cs native(FastDDS, standalone=0). morai_ros2_msgs 빌드·검증 스크립트 준비됨. host Humble(2026) ↔ SIM ros2cs(2023) ABI 불일치로 native 불가. 대응: MORAI 문의 후 host 버전 정합, 병행 rosbridge 우회 검토. 런처는 기본 ROS2 미소싱(SIM 정상 시작), SOURCE_ROS2=1 opt-in.
+- 05 MORAI ROS2 Native Topic: **BLOCKED (AVS-007)** — native·rosbridge 양 경로 모두 차단. native(ros2cs)=SIM startup std::bad_cast(버전정합 실험으로 반증), rosbridge=토픽 생성되나 SIM publish를 필드불일치로 전부 거부(표준 tf 포함). 근본원인=MORAI 26.R1.H3 ↔ 2026 host/rosbridge_suite 버전 불일치. **MORAI 문의 대기**(초안: runbooks/avs-007_morai_inquiry.md). 준비물: morai_msgs/morai_ros2_msgs 빌드, verify/rosbridge 스크립트, 런처 SOURCE_ROS2/FASTDDS_PREFIX opt-in.
 - 05.5 Built-in Batch 파이프라인: TODO (**Autoware 전 필수**)
 - 05.7 재현성 캘리브레이션 + Multi-Map: TODO
 - 06~08 Autoware/Mapping/Closed-loop: 보류 (05.7 통과 후)
@@ -44,7 +44,7 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 - AVS-004: OPEN(MED) — Scenario Runner VTK/OpenGL GUI가 이 X 환경(NoMachine+offload)에서 검게 렌더(호버 시만 깜박). 소프트웨어 GL·QT_XCB_GL_INTEGRATION=none·SIM 끔 모두 무효 → 렌더 경로 문제. 완화: 블라인드 조작 + SIM에서 결과 확인.
 - AVS-005: OPEN(LOW) — MORAI SIM 창을 리사이즈/축소하면 hang/크래시(swapchain 재초기화 폭주). 완화: SIM 창 크기 건드리지 말 것.
 - AVS-006: OPEN(HIGH) — OpenSCENARIO API 22.R3 lib이 sourcedefender 암호화(.pye 694개)인데, 3.7용 sourcedefender 런타임이 PyPI에서 삭제돼(현재 8개 릴리스 전부 >=3.9/3.10) API import 불가 → **Stage 03.5 블로커**. env(py3.7.3)는 준비됨. 대응: MORAI에 정확한 sourcedefender 버전/설치 경로 문의. (증거: ~/avstack/logs/avs006_*)
-- AVS-007: OPEN(HIGH) — **Stage 05 블로커**. SIM 26.R1.H3 ROS2 Native(ros2cs, standalone=0, humble, 2023-03-31 빌드)를 host Humble(2026-06 패치)로 붙이면 SIM이 startup에서 `librmw_fastrtps_cpp std::bad_cast`로 종료; 미소싱이면 Connect 시 `librcl not found`. distro는 일치(패치 ABI 문제로 추정, 단 Humble ABI 안정성상 이례적이라 H1 버전/H2 RTTI/H3 매뉴얼 미준수 미확정). 런처 기본 미소싱(SIM 정상 시작), `SOURCE_ROS2=1` opt-in. 대응: MORAI 문의(정확 버전/standalone/docker) 후 host 버전 정합, 병행 rosbridge 우회. (리포트: runbooks/avs-007_ros2_native_report.md, 증거: ~/avstack/logs/avs007_*)
+- AVS-007: OPEN(HIGH) — **Stage 05 블로커, native·rosbridge 양 경로 차단**. (1) native ros2cs(standalone=0, humble 2023-03-31): host Humble(2026) SIM startup시 `librmw_fastrtps_cpp std::bad_cast`. **버전정합 실험(2023 fastrtps prefix)도 동일 실패 → H1(버전) 반증**, 원인은 host버전 아님(H2 RTTI/H3). (2) rosbridge: 연결·토픽생성 OK지만 SIM publish를 필드불일치로 전부 거부(`EgoVehicleStatus`·표준 `tf2_msgs transform` 포함) → 데이터 0. 근본=MORAI 26.R1.H3 ↔ 2026 host/rosbridge_suite 불일치. 대응: **MORAI 문의**(호환 ROS2/rosbridge 버전, standalone ros2cs, 26.R1.H3 msg 정의). 런처 기본 미소싱, `SOURCE_ROS2=1`/`FASTDDS_PREFIX` opt-in. (리포트 runbooks/avs-007_ros2_native_report.md, 문의초안 runbooks/avs-007_morai_inquiry.md, 증거 ~/avstack/logs/avs007_*)
 
 ## 커밋 규칙
 - 커밋 시점: Stage 통과, 이슈 등록/해결, 스크립트·설정 변경 시에만.
