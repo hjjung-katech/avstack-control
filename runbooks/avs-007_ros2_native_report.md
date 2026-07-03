@@ -32,8 +32,15 @@
   - (H2) **RTTI/dlopen 가시성** 문제(ros2cs/Unity 가 typesupport 를 RTLD_LOCAL 로 로드 → dynamic_cast 실패).
   - (H3) 내가 **매뉴얼의 지정 절차/버전을 안 따름**(예: MORAI 가 특정 Humble 패치·docker 를 지정).
 - 참고: ros2/rmw_fastrtps #733/#797 은 **distro 혼용** 시 bad_alloc/bad_cast 보고(우리는 동일 distro, 패치만 상이).
-- **결론**: "host ROS2 를 2023 버전으로 정합" 은 **H1 이면 유효**하나 **H2/H3 이면 효과 없을 수 있음** →
-  다운그레이드를 강행하기 전에 **MORAI 의 공식 지정 환경 확인이 선행**돼야 한다.
+- **결론**: "host ROS2 를 2023 버전으로 정합" 은 **H1 이면 유효**하나 **H2/H3 이면 효과 없을 수 있음**.
+
+### 3-1. #2 실험 결과 (2026-07-03) — **H1 반증됨**
+2023-03-13 스냅샷의 Fast-DDS 계열(2.6.4/rmw 6.2.2/typesupport 2.2.0)을 SIM 에만 앞세워 실행:
+- SIM environ 캡처로 prefix 전파 확인(LD_LIBRARY_PATH 맨 앞). 그럼에도 **동일 `librmw_fastrtps_cpp
+  std::bad_cast` 로 startup 사망**. 2026/2023 무관하게 같은 실패.
+- 대조: 동일 2023 libs 를 얹은 rclpy 는 정상(실제 2023 lib 로드 확인). → 코드 경로 자체는 건전.
+- **∴ 원인은 host ROS2 버전이 아님. SIM ros2cs/Unity 로딩 특유(H2/H3).**
+  **host 다운그레이드/버전정합은 해결책이 아니다(실험적 확정).**
 
 **내 진단 이력의 오류 (기록)**
 - 중간에 "SIM 실행 셸에서 ROS2 를 격리해야 한다"고 정반대로 판단해 런처에 격리 로직을 넣었다가 되돌림.
@@ -48,14 +55,12 @@
 3. ros2cs 를 **standalone=1(자체포함) 빌드**로 제공할 수 있는가? (host 버전 의존 제거)
 4. 공식 매뉴얼의 ROS2 Native 설치 절차(요구 버전·RMW·설정)를 알려달라. (help-morai-sim ROS2 페이지 링크 포함)
 
-## 5. 다음 단계 (권장 순서)
-1. **[선행] MORAI 문의 발송** — 위 4개 질문. 다운그레이드 방향의 타깃 버전을 확정하기 위함.
-   (동시에 help-morai-sim 26.R1 ROS2 문서에서 지정 버전 재확인.)
-2. **[병행·저위험] rosbridge 경로 임시 검증** — SIM WebSocket 은 ros2cs/DDS ABI 를 안 타므로 이 블로커와 무관.
-   host `rosbridge_server` + SIM ROS(bridge) Connect 로 토픽/‑offset 을 먼저 확보(Stage 05 진행 유지).
-3. **[문의 회신 후] host ROS2 버전 정합** — MORAI 지정 버전으로 (a) 구 deb 핀 설치 또는 (b) 별도 prefix +
-   `SOURCE_ROS2=1` + LD_LIBRARY_PATH 로 SIM 에만 적용(시스템 Humble 은 보존, 저위험 우선).
-   - H2(RTTI) 가능성 대비: 버전 정합으로도 안 되면 ros2cs standalone 빌드/문의 회신에 의존.
+## 5. 다음 단계 (권장 순서, #2 실험 후 갱신)
+1. **[주 경로] rosbridge 로 Stage 05 진행** — native 가 MORAI 측 이슈(H2/H3)로 막혔으므로, ABI 무관한
+   rosbridge 로 토픽/offset 을 확보해 Stage 05 를 실질 통과시킨다(§6-B, `run_rosbridge.sh`).
+2. **[문의] MORAI 에 native 지원 요청** — §4 질문(특히 **standalone ros2cs 빌드** 또는 Linux 에서
+   ros2cs 로드 시 `librmw_fastrtps_cpp std::bad_cast` 회피 절차). 버전 정합은 실험으로 배제됨을 첨부.
+3. **[보류] host ROS2 버전 정합** — **#2 실험으로 무효 확인됨**. 재시도 불필요(H1 반증).
 
 ## 부록 — 증거 파일
 - `~/avstack/logs/avs007_ros2cs_abi_mismatch_20260703.md` (원 증거: metadata/ldd/Player.log/버전)
