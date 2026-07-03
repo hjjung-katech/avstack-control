@@ -1,60 +1,86 @@
-# Stage 05 — MORAI ROS2 Native Topic 체크리스트
+# Stage 05 — MORAI ROS2 Native Topic 체크리스트 (26.R1)
 
 작업 정의: `runbooks/integrated_roadmap.md` 3장 표(Stage 05) — **"topic 확인 + sim/wall clock offset 측정"** (V7 준비).
 선행: Stage 04 PASS(완료). 게이트 아님.
 
-## 0. 연동 방식 (조사 결과, 2026-07-03)
+## 0. 아키텍처 (26.R1 기준, 2026-07-03 재정렬)
 
-MORAI SIM은 `RosBridgeClient.dll` 기반 — **rosbridge 방식**이다(순수 DDS 네이티브 아님).
-SIM이 rosbridge_server(WebSocket 9090)에 **클라이언트로 접속**하고, 서버가 토픽을
-실제 ROS2 DDS 토픽으로 노출한다 → `ros2 topic list` 에서 확인 가능.
+MORAI SIM 26.R1 은 **ROS2 Humble 을 native 지원**한다(rosbridge / morai_ros2_connector 불필요).
+연동은 두 채널로 분리한다:
 
-- 메시지 정의: **`morai_ros2_msgs`** (github MORAI-Autonomous/MORAI-ROS2_morai_msgs, msg 32종).
-  → `~/avstack/ros2_ws` 에 colcon 빌드 완료. 없으면 토픽은 떠도 타입 미해석.
-- 참고: https://github.com/MORAI-Autonomous/MORAI-ROS2_morai_msgs ,
-  MORAI ROS quick start (Edit→Network Settings→Bridge IP 설정).
+```
+Scenario Runner  ──(gRPC, 7789)──▶  MORAI SIM: Drive 26.R1  ──(ROS2 Native, CycloneDDS)──▶  ROS2 / Autoware / 사용자 알고리즘
+  .xosc/MGeo 제어                     지도·차량·센서·물리                    센서·상태 수신 / Ego 제어 명령 송신
+```
 
-## 1. 준비 (완료/사용자)
+- **Scenario Runner ↔ SIM = gRPC(7789)** — 시나리오/엔티티 제어. (Stage 03.5/03.7 트랙)
+- **사용자·Autoware ↔ SIM = ROS2 Native(CycloneDDS)** — 본 Stage.
+- ⚠️ **폐기된 접근**: rosbridge(9090) + `/client_count` 진단은 구버전 방식. 26.R1 에서는 지표 아님.
 
-- [x] `morai_ros2_msgs` colcon 빌드: `~/avstack/ros2_ws/install` (32 msg 등록 확인)
-- [x] 검증 스크립트: `scripts/stage05_ros2_native/{run_rosbridge,verify_topics}.sh`, `offset_probe.py`
-- [ ] **(사용자/sudo)** rosbridge 설치: `sudo apt install -y ros-humble-rosbridge-suite`
-- [ ] **(사용자)** MORAI SIM 기동: `scripts/run_morai_launcher_nvidia.sh` → 지도 로드
+### 핵심 전제 (이게 안 맞으면 토픽이 아예 안 보임)
+1. **RMW = CycloneDDS**: `export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp`
+   (설치: `sudo apt install -y ros-humble-rmw-cyclonedds-cpp`. 기본 fastrtps 면 디스커버리 실패.)
+2. **ROS_DOMAIN_ID 일치**: 기본 0. SIM ROS2 설정에 Domain ID 필드가 있으면 값 일치.
+3. **메시지 정의**: `morai_ros2_msgs` colcon 빌드(`~/avstack/ros2_ws`) — native 여도 타입 해석에 필요.
+4. `ROS_LOCALHOST_ONLY=0` (CLAUDE.md: 1 금지).
 
-## 2. 실행 순서
+→ 위 1·3·4 는 `scripts/stage05_ros2_native/env.sh` 가 일괄 처리. 사용 시 `source` 만.
 
-1. **터미널 A** — rosbridge 서버:
-   `bash scripts/stage05_ros2_native/run_rosbridge.sh`  (port 9090 대기)
-2. **SIM** — Edit → Network Settings → **Bridge IP = 127.0.0.1**, port 9090 →
-   ego/sensor publish 항목 활성화 → Apply. (Ego status, GPS, IMU 등 켬)
-3. **터미널 B** — 검증:
-   `bash scripts/stage05_ros2_native/verify_topics.sh`
-   - `ros2 topic list` 에 MORAI 토픽(예: `/Ego_topic`, `/gps`, `/imu`, `/Object_topic`) 표시
-   - `/Ego_topic` hz + `echo --once`
-   - `offset_probe.py` 로 sim/wall offset(mean/median/stdev) 산출
-   - offset 대상 토픽/타입이 다르면:
-     `OFFSET_TOPIC=/gps OFFSET_TYPE=GPSMessage bash .../verify_topics.sh`
+## 1. 준비 상태
+
+- [x] `morai_ros2_msgs` colcon 빌드: `~/avstack/ros2_ws/install` (32 msg)
+- [x] `ros-humble-rmw-cyclonedds-cpp` 설치
+- [x] 스크립트: `scripts/stage05_ros2_native/{env,verify_topics,send_ctrl_cmd}.sh`, `offset_probe.py`
+- [ ] **(사용자)** SIM 기동: `scripts/run_morai_launcher_nvidia.sh` → 4GB VRAM 맞는 지도(K-City 등, AVS-002)
+
+## 2. 실행 순서 (clean start)
+
+1. **SIM 기동** + 지도 로드 + Ego 스폰.
+2. **SIM: Edit → Network Settings → ROS2**
+   - Ego Network > Publisher: **Ego Vehicle Status** — Topic `/ego_vehicle_status`,
+     Type `morai_ros2_msgs/msg/EgoVehicleStatus`, Hz 10~30
+   - Sensor: **GPS**(`/gps`), 가능하면 IMU
+   - (제어 테스트용) Ego Ctrl Cmd — Topic `/ctrl_cmd`(또는 `/ctrl_cmd_0`), Type `morai_ros2_msgs/msg/CtrlCmd`
+   - Domain ID 필드 있으면 **0** 확인
+   - **Connect 클릭** (설정 변경 시마다 다시 Connect)
+3. **SIM: 시뮬레이션 Play** (Pause 면 hz≈0).
+4. **터미널: 검증**
+   ```
+   bash scripts/stage05_ros2_native/verify_topics.sh
+   ```
+   - `ros2 topic list -t` 에 `/ego_vehicle_status`, `/gps`, `/clock` 등 표시
+   - `/ego_vehicle_status` hz>0, echo --once 성공
+   - `offset_probe.py` 로 sim/wall offset(mean/median/stdev)
+   - 토픽/타입이 다르면: `EGO_TOPIC=/gps EGO_TYPE=GPSMessage bash .../verify_topics.sh`
+5. (Gate 4, 선택) **제어 송신 테스트**: `bash scripts/stage05_ros2_native/send_ctrl_cmd.sh` → Ego 움직임 확인.
 
 ## 3. PASS / FAIL 판정
 
 | # | 항목 | PASS 조건 |
 |---|---|---|
-| P1 | 연결 | rosbridge에 SIM 접속(`client_count`>0) |
-| P2 | 토픽 노출 | `ros2 topic list` 에 MORAI 토픽 ≥1 (typed) |
-| P3 | 수신 | `/Ego_topic` echo --once 성공, hz>0 |
-| P4 | offset | `offset_probe.py` 가 n≥20 샘플로 mean/stdev 산출 |
+| P1 | RMW/디스커버리 | cyclonedds + domain 일치, `ros2 node list` 에 SIM 노드 표시 |
+| P2 | 토픽 노출 | `topic list -t` 에 MORAI 토픽 ≥1 (typed) |
+| P3 | 수신 | `/ego_vehicle_status` echo --once 성공, hz>0 |
+| P4 | offset | `offset_probe.py` n≥20 로 mean/stdev 산출 |
 | P5 | 기록 | stages.tsv 기록 + 증거 로그 |
 
-**Stage 05 PASS** = P1·P2·P3·P4 성공 + P5. offset 수치는 05.7 재현성 캘리브레이션의 baseline.
+**Stage 05 PASS** = P1·P2·P3·P4 + P5. offset 수치는 05.7 재현성 캘리브레이션 baseline.
+(Gate 4 제어 테스트는 Stage 05.5/06 준비용 참고 — Stage 05 PASS 필수 아님.)
 
-**FAIL 시**: (a) 토픽 0 → SIM Network Settings publish 미활성/Bridge IP 오류/9090 포트 불일치,
-(b) 타입 미해석 → `~/avstack/ros2_ws/install/setup.bash` 소싱 확인, (c) 이슈 등록(`record_issue.sh`).
+## 4. FAIL 트리아지 (증상별)
 
-## 4. 기록 위치
+- **토픽 자체가 안 보임** → RMW 미일치(fastrtps), Connect 안 누름, Domain ID 불일치, ROS2 설정 미적용.
+- **토픽 보이는데 hz=0** → SIM Pause, 해당 Publisher 비활성, Frame rate 0, Ego/센서 미생성.
+- **ego_vehicle_status 는 되는데 GPS 안 됨** → GPS 센서가 Ego 에 미장착, Sensor Network 미연결.
+- **GPS 되는데 제어 안 됨** → `/ctrl_cmd` 토픽명/타입 불일치, Cmd Control 미설정, Ego control mode.
+- 해결 안 되면 이슈 등록(`record_issue.sh`).
+
+## 5. 기록 위치
 
 - 증거: `~/avstack/runs/stage05_verify_<ts>.log`, `stage05_morai_msgs_build_<ts>.log`
-- Stage 기록: `scripts/record_stage.sh 05_ros2_native PASS "<요약>" "<로그>" "Stage 05.5"`
-- offset 수치는 api_contract 계열이 아니라 stages 기록 요약 + 로그에 남긴다.
+- Stage 기록: `scripts/record_stage.sh 05_ros2_native PASS "<요약(offset 포함)>" "<로그>" "Stage 05.5"`
 
-## 참고 — Docker 판단
-- 로드맵 게이트: Docker 도입 판단은 Stage 05 통과 후, 실제 설치는 Stage 06 착수 시점(로드맵 3장).
+## 참고
+- MORAI ROS2 msgs: https://github.com/MORAI-Autonomous/MORAI-ROS2_morai_msgs
+- 26.R1.H1(2026-05-04) hotfix: Ego Ctrl cmd 기본 Topic 명 수정 포함 → 가능하면 H1 이상 사용.
+- Docker 판단은 Stage 05 통과 후, 실제 설치는 Stage 06 착수 시점(로드맵 3장).
