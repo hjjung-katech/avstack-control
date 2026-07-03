@@ -14,22 +14,37 @@ Scenario Runner  ──(gRPC, 7789)──▶  MORAI SIM: Drive 26.R1  ──(ROS
 ```
 
 - **Scenario Runner ↔ SIM = gRPC(7789)** — 시나리오/엔티티 제어. (Stage 03.5/03.7 트랙)
-- **사용자·Autoware ↔ SIM = ROS2 Native(CycloneDDS)** — 본 Stage.
+- **사용자·Autoware ↔ SIM = ROS2 Native(내장 ros2cs, FastDDS)** — 본 Stage.
+- SIM 은 `Simulator_v.R1.260701.H3`, `libros2cs_native.so` 내장(ROS2ForUnity). 외부 relay 불필요.
 - ⚠️ **폐기된 접근**: rosbridge(9090) + `/client_count` 진단은 구버전 방식. 26.R1 에서는 지표 아님.
 
-### 핵심 전제 (이게 안 맞으면 토픽이 아예 안 보임)
-1. **RMW = CycloneDDS**: `export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp`
-   (설치: `sudo apt install -y ros-humble-rmw-cyclonedds-cpp`. 기본 fastrtps 면 디스커버리 실패.)
-2. **ROS_DOMAIN_ID 일치**: 기본 0. SIM ROS2 설정에 Domain ID 필드가 있으면 값 일치.
-3. **메시지 정의**: `morai_ros2_msgs` colcon 빌드(`~/avstack/ros2_ws`) — native 여도 타입 해석에 필요.
-4. `ROS_LOCALHOST_ONLY=0` (CLAUDE.md: 1 금지).
+### ⚠️ 함정 1 — SIM 실행 셸에 ROS2 를 source 하면 Connect 가 실패한다 (실측)
+SIM 내장 ros2cs 는 자체 ROS2 라이브러리를 쓴다. 실행 셸에 `/opt/ros/humble` 이 source 돼 있으면
+(예: `~/.bashrc` 자동 소싱) `LD_LIBRARY_PATH` 충돌로 native `rcl` 로드가 실패한다.
+- Player.log 증거: `ROS2 version in 'ros2cs' metadata doesn't match currently sourced version`
+  → `TypeInitializationException: ROS2.NativeRcl` → `MoraiCmdController.Ros2Connect()` → Connect 실패.
+- **대응**: SIM 은 반드시 **ROS2 미소싱 환경**에서 실행. `scripts/run_morai_launcher_nvidia.sh` 가
+  실행 전 `/opt/ros`·`ros2_ws` 경로와 ROS 변수를 subshell 한정으로 제거한다(자동). → 이 래퍼로만 실행.
 
-→ 위 1·3·4 는 `scripts/stage05_ros2_native/env.sh` 가 일괄 처리. 사용 시 `source` 만.
+### ⚠️ 함정 2 — RMW 벤더는 FastDDS 여야 한다 (CycloneDDS 아님)
+SIM Plugins 의 typesupport 는 **fastrtps 303개 / cyclonedds 0개** → SIM 은 FastDDS 로 퍼블리시한다.
+- **리스너 RMW = `rmw_fastrtps_cpp`(기본)**. cyclonedds 로 바꾸면 RMW 불일치로 토픽 안 보임.
+  (앞선 CycloneDDS 가설은 이 H3 빌드에선 틀림. env.sh 는 fastrtps 로 고정.)
+
+### 핵심 전제 (이게 안 맞으면 토픽이 아예 안 보임)
+1. **SIM 은 ROS2 미소싱 셸에서 실행** (래퍼가 자동 격리). ← 함정 1
+2. **리스너 RMW = rmw_fastrtps_cpp** (기본). ← 함정 2
+3. **ROS_DOMAIN_ID 일치**: 기본 0. SIM ROS2 설정에 Domain ID 필드가 있으면 값 일치.
+4. **메시지 정의**: `morai_ros2_msgs` colcon 빌드(`~/avstack/ros2_ws`) — 타입 해석에 필요.
+5. `ROS_LOCALHOST_ONLY=0` (CLAUDE.md: 1 금지).
+
+→ 리스너 쪽 2·4·5 는 `scripts/stage05_ros2_native/env.sh` 가 일괄 처리(SIM 셸에서는 source 금지).
 
 ## 1. 준비 상태
 
 - [x] `morai_ros2_msgs` colcon 빌드: `~/avstack/ros2_ws/install` (32 msg)
-- [x] `ros-humble-rmw-cyclonedds-cpp` 설치
+- [x] 리스너 RMW = rmw_fastrtps_cpp (ROS2 desktop 기본, 별도 설치 불필요)
+- [x] 런처 ROS2 환경 격리(`run_morai_launcher_nvidia.sh`) — SIM 내장 ros2cs 충돌 방지
 - [x] 스크립트: `scripts/stage05_ros2_native/{env,verify_topics,send_ctrl_cmd}.sh`, `offset_probe.py`
 - [ ] **(사용자)** SIM 기동: `scripts/run_morai_launcher_nvidia.sh` → 4GB VRAM 맞는 지도(K-City 등, AVS-002)
 
@@ -69,7 +84,8 @@ Scenario Runner  ──(gRPC, 7789)──▶  MORAI SIM: Drive 26.R1  ──(ROS
 
 ## 4. FAIL 트리아지 (증상별)
 
-- **토픽 자체가 안 보임** → RMW 미일치(fastrtps), Connect 안 누름, Domain ID 불일치, ROS2 설정 미적용.
+- **Connect 가 Disconnect 로 되돌아감** → SIM 을 ROS2 source 된 셸에서 실행(함정 1). 래퍼로만 실행.
+- **토픽 자체가 안 보임** → 리스너 RMW 가 fastrtps 아님(함정 2), Domain ID 불일치, ROS2 설정 미적용.
 - **토픽 보이는데 hz=0** → SIM Pause, 해당 Publisher 비활성, Frame rate 0, Ego/센서 미생성.
 - **ego_vehicle_status 는 되는데 GPS 안 됨** → GPS 센서가 Ego 에 미장착, Sensor Network 미연결.
 - **GPS 되는데 제어 안 됨** → `/ctrl_cmd` 토픽명/타입 불일치, Cmd Control 미설정, Ego control mode.

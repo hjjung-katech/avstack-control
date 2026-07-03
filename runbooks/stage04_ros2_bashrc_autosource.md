@@ -33,6 +33,11 @@ humble 0
 
 ## 부작용 / 롤백
 - 부작용: 모든 셸에 ROS 환경(PATH/AMENT 등)이 항상 붙음. ROS 미사용 작업에도 영향.
+- ⚠️ **MORAI SIM 충돌 주의**: SIM 은 ros2cs(FastDDS)를 내장하는데, ROS2 가 source 된 셸에서
+  SIM 을 실행하면 `LD_LIBRARY_PATH` 충돌로 Network Settings **Connect 가 실패**한다
+  (Player.log: "ros2cs metadata doesn't match currently sourced version"). 이를 막기 위해
+  `scripts/run_morai_launcher_nvidia.sh` 가 SIM 실행 전 ROS2 환경을 subshell 한정으로 제거한다.
+  → **SIM 은 반드시 이 래퍼로만 실행**하면 이 자동 소싱과 공존 가능. (상세: `stage05_ros2_native_checklist.md` 함정 1)
 - 롤백: `.bashrc`의 `--- ROS2 Humble ... --- end ---` 블록 삭제.
 
 증거: `~/avstack/runs/stage04_bashrc_autosource_20260703_144649.log`

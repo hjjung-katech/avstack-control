@@ -25,6 +25,28 @@ if [ "${RUN_REMOTE:-0}" = "1" ]; then
   export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
 fi
 
+# ROS2 환경 격리 (필수): SIM은 ros2cs(ROS2ForUnity, FastDDS)를 내장한다. 실행 셸에 ROS2가
+# source돼 있으면(예: ~/.bashrc 자동 소싱, /opt/ros/humble) 내장 ros2cs가 /opt/ros 라이브러리와
+# 충돌해 Network Settings의 Connect가 실패한다.
+#   Player.log 증거: "ROS2 version in 'ros2cs' metadata doesn't match currently sourced version"
+#                    → TypeInitializationException: ROS2.NativeRcl → MoraiCmdController.Ros2Connect()
+# 따라서 SIM 프로세스는 반드시 ROS2 미소싱 환경에서 실행한다(아래 subshell 한정 정리).
+_strip_ros() {  # 콜론구분 PATH류에서 /opt/ros·ros2_ws 성분 제거
+  local out="" p; local IFS=:
+  for p in $1; do
+    case "$p" in */opt/ros/*|*/ros2_ws/*) ;; *) [ -n "$p" ] && out="${out:+$out:}$p" ;; esac
+  done
+  printf '%s' "$out"
+}
+if [ -n "${AMENT_PREFIX_PATH:-}${ROS_DISTRO:-}" ]; then
+  echo "[INFO] ROS2 환경 감지 → SIM 실행 전 격리(내장 ros2cs 충돌 방지)"
+fi
+export LD_LIBRARY_PATH="$(_strip_ros "${LD_LIBRARY_PATH:-}")"
+export PATH="$(_strip_ros "${PATH:-}")"
+export PYTHONPATH="$(_strip_ros "${PYTHONPATH:-}")"
+unset AMENT_PREFIX_PATH AMENT_CURRENT_PREFIX ROS_DISTRO ROS_VERSION ROS_PYTHON_VERSION \
+      RMW_IMPLEMENTATION ROS_LOCALHOST_ONLY COLCON_PREFIX_PATH CYCLONEDDS_URI 2>/dev/null || true
+
 MORAI_DIR="${MORAI_DIR:-$HOME/avstack/morai/launcher/MoraiLauncher_Lin}"
 BIN="MoraiLauncher_Lin.x86_64"
 LAUNCH_SH="MORAISim.sh"
