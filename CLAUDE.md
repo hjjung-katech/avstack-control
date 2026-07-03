@@ -19,15 +19,23 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 - Markdown 문서는 runbooks/ 또는 명시 요청이 있을 때만 작성한다.
 - ros2 topic echo는 --once 또는 timeout 5와 함께만 실행한다.
 - Docker와 Autoware 설치 작업은 Stage 05 통과 전까지 보류한다.
+- Stage 03.7(경계 감지) 통과 전에는 Batch 파이프라인(05.5) 구축을 시작하지 않는다.
+- Stage 05.7 통과 전에는 Autoware/Docker 작업을 시작하지 않는다.
+- TSV는 append-only. 과거 행 정정은 AMEND: 접두어를 단 새 행 추가로 하며, 동일 stage/id에 행이 여러 개면 최신 행이 유효하다.
 
 ## Stage 현황 (Gate 통과 시 이 섹션을 갱신하고 stage 기록과 함께 커밋)
 - 00 Remote GPU: PASS
 - 01 MORAI Launcher/SIM: PASS
 - 02 Scenario Runner Window: PASS
 - 03 Example XOSC Built-in: PASS (KATRI+Cut_In_1, Built-in ego 주행 확인. SR GUI는 검게 렌더돼 블라인드 조작 — AVS-004)
-- 04 ROS2 Humble Host: TODO
+- **다음: 03.5 Python API 계약 검증** (Qt 의존성·시그니처 실측 → api_contract.md; Sprint 0). AVS-001 RESOLVED.
+- 03.7 API 단일 실행 + 경계 감지: TODO (**게이트**)
+- 04 ROS2 Humble Host: TODO (03.5와 병렬 가능)
 - 05 MORAI ROS2 Native Topic: TODO
-- 06~08 Autoware/Mapping/Closed-loop: TODO
+- 05.5 Built-in Batch 파이프라인: TODO (**Autoware 전 필수**)
+- 05.7 재현성 캘리브레이션 + Multi-Map: TODO
+- 06~08 Autoware/Mapping/Closed-loop: 보류 (05.7 통과 후)
+- 통합 로드맵 정본: runbooks/integrated_roadmap.md (ADR-007)
 
 ## 열린 이슈 (해결 시 이 섹션과 issues.tsv를 함께 갱신)
 - AVS-002: OPEN(MED) — 대형 지도 로드 시 SIM 크래시. `sangam_nobuilding`(686MB) 로드 중 Vulkan Out of memory→SIGSEGV. **4GB VRAM 부족**(K-City 350MB는 정상). 완화: 4GB에 맞는 지도 사용. (※ 이전 "부분 렌더/GPU 성능" 진단은 증상 오해로 정정됨)
