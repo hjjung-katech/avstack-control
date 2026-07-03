@@ -35,6 +35,22 @@
 
 ---
 
+## 0.1 현재 블로커 — AVS-006 (2026-07-03, Stage 03.5 보류)
+
+Python 3.7.3 env(miniconda `morai-osc`, openssl 1.1.1w)까지 구성 완료. 그러나 lib이 **sourcedefender
+암호화(.pye 694개)** 이고 **3.7용 sourcedefender 런타임을 PyPI에서 구할 수 없다**(릴리스 8개 전부 >=3.9/3.10,
+wheel 없음). → API import 불가. 증거: `~/avstack/logs/avs006_sourcedefender_py37_block_20260703.md`.
+
+**해제 조건**: 3.7 호환 sourcedefender 런타임 확보. **MORAI 문의**가 권위 있는 경로.
+
+**MORAI 문의 포인트 (그대로 사용):**
+1. OpenSCENARIO API **22.R3**(Linux)를 **Python 3.7.3**에서 실행하려면 **sourcedefender 어느 버전**이 필요한가?
+2. 그 버전을 어디서 받는가? (PyPI에서 3.7 버전이 삭제됨 — 벤더 계정/직접 배포 여부)
+3. 26.R1 SIM과 붙는 **최신 OpenSCENARIO API 버전**은 22.R3가 맞는가? 더 최신(예: 26.R1 대응)이 있으면 링크.
+4. (있으면) 정식 `requirements.txt` / 설치 가이드.
+
+확보 후: `pip install "sourcedefender==<버전>"` → 나머지 deps → §2 실험 재개.
+
 ## 1. 실행 전 조건 (preflight)
 
 - [ ] MORAI SIM 실행 중, 지도 로드 완료 (`scripts/run_morai_launcher_nvidia.sh`)

@@ -28,7 +28,7 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 - 01 MORAI Launcher/SIM: PASS
 - 02 Scenario Runner Window: PASS
 - 03 Example XOSC Built-in: PASS (KATRI+Cut_In_1, Built-in ego 주행 확인. SR GUI는 검게 렌더돼 블라인드 조작 — AVS-004)
-- **다음: 03.5 Python API 계약 검증** (Qt 의존성·시그니처 실측 → api_contract.md; Sprint 0). AVS-001 RESOLVED.
+- **다음: 03.5 Python API 계약 검증** — **BLOCKED (AVS-006)**. 실물 API=OpenSCENARIO API 22.R3(`~/avstack/morai/scenario_runner`), Python 3.7.3 env(miniconda morai-osc) 구성 완료. sourcedefender 3.7 런타임 확보 불가로 보류(MORAI 문의 대기). AVS-001 RESOLVED.
 - 03.7 API 단일 실행 + 경계 감지: TODO (**게이트**)
 - 04 ROS2 Humble Host: TODO (03.5와 병렬 가능)
 - 05 MORAI ROS2 Native Topic: TODO
@@ -43,6 +43,7 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 - AVS-003: RESOLVED — MORAISim.sh exit 127(백틱)·SingleInstance 양보-exit0. 래퍼에서 흡수·가드.
 - AVS-004: OPEN(MED) — Scenario Runner VTK/OpenGL GUI가 이 X 환경(NoMachine+offload)에서 검게 렌더(호버 시만 깜박). 소프트웨어 GL·QT_XCB_GL_INTEGRATION=none·SIM 끔 모두 무효 → 렌더 경로 문제. 완화: 블라인드 조작 + SIM에서 결과 확인.
 - AVS-005: OPEN(LOW) — MORAI SIM 창을 리사이즈/축소하면 hang/크래시(swapchain 재초기화 폭주). 완화: SIM 창 크기 건드리지 말 것.
+- AVS-006: OPEN(HIGH) — OpenSCENARIO API 22.R3 lib이 sourcedefender 암호화(.pye 694개)인데, 3.7용 sourcedefender 런타임이 PyPI에서 삭제돼(현재 8개 릴리스 전부 >=3.9/3.10) API import 불가 → **Stage 03.5 블로커**. env(py3.7.3)는 준비됨. 대응: MORAI에 정확한 sourcedefender 버전/설치 경로 문의. (증거: ~/avstack/logs/avs006_*)
 
 ## 커밋 규칙
 - 커밋 시점: Stage 통과, 이슈 등록/해결, 스크립트·설정 변경 시에만.
