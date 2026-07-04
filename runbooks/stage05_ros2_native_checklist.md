@@ -40,7 +40,7 @@ SIM ros2cs 는 **standalone=0**(humble 2023-03-31 빌드): core ROS2 lib 을 hos
 - **host ROS2 소싱**(`SOURCE_ROS2=1`): SIM 이 **startup 에서 `librmw_fastrtps_cpp std::bad_cast` 로 즉시 종료**.
 - **2023 fastrtps 로 버전 정합**(`FASTDDS_PREFIX`): prefix 전파 확인됐음에도 **동일 bad_cast → H1(버전) 반증**.
   동일 2023 libs 는 일반 rclpy 프로세스에서 정상 → 원인은 SIM 의 ros2cs/Unity 로딩(H2 RTLD/RTTI 추정, H3 가능).
-- **∴ 켜도, 꺼도, 맞춰도 안 됨. native 는 MORAI 지원 필요**(`avs-007_morai_inquiry.md` 발송).
+- **∴ 켜도, 꺼도, 맞춰도 안 됨. native 는 MORAI 지원 필요**(`vendor/morai/OUTBOX/MORAI-001_avs007_inquiry.md` 발송).
 - 런처 기본은 **ROS2 미소싱**(SIM 정상 시작용). `SOURCE_ROS2=1`/`FASTDDS_PREFIX` 는 실험용 opt-in 으로만 유지.
 
 ### 리스너 쪽 상수 (native 든 rosbridge 든 공통)
@@ -114,7 +114,7 @@ SIM ros2cs 는 **standalone=0**(humble 2023-03-31 빌드): core ROS2 lib 을 hos
 ### 6-A. ~~버전 정합 테스트~~ — **실시됨, H1 반증. 재시도 금지**
 2023-03-13 스냅샷 Fast-DDS(2.6.4)를 `FASTDDS_PREFIX` 로 SIM 에 전달(전파 /proc 확인)했으나
 **동일 std::bad_cast** → 버전은 원인이 아님. 동일 libs 로 rclpy 는 정상. **native 는 MORAI 지원 대기**
-(`avs-007_morai_inquiry.md`). `fetch_fastdds_snapshot.sh`/`SOURCE_ROS2`/`FASTDDS_PREFIX` 는
+(`vendor/morai/OUTBOX/MORAI-001_avs007_inquiry.md`). `fetch_fastdds_snapshot.sh`/`SOURCE_ROS2`/`FASTDDS_PREFIX` 는
 회신 후 재검증용으로만 유지.
 
 ### 6-B. rosbridge 경로 — 주 경로. **1차 관문 = `header.seq` 패치**

@@ -251,7 +251,7 @@ python3 ~/avstack-control/scripts/offset_probe.py   # 기존 자산: 지연/offs
 - 진단 완료 시: `issues.tsv` AVS-007에 AMEND 행 (귀속 결과 + 매트릭스 행 명시)
 - 귀속이 환경 설정이면: env 변경을 ADR로 (직접 수정 전 결정 기록)
 - rosbridge 격하 시: ADR 등재 + 설계노트 9.4(3원 소스) erratum
-- MORAI 문의 초안(avs-007_morai_inquiry.md)에 D1/D4 실측 결과 첨부 — "participant 수준부터 확인했다"는 근거는 벤더 대응 속도를 크게 높인다
+- MORAI 문의 초안(vendor/morai/OUTBOX/MORAI-001_avs007_inquiry.md)에 D1/D4 실측 결과 첨부 — "participant 수준부터 확인했다"는 근거는 벤더 대응 속도를 크게 높인다
 
 ---
 
