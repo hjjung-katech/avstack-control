@@ -1,6 +1,6 @@
 # MORAI 문의 — 26.R1.H3 ROS2 연동 (내부 ID: MORAI-001 / 관련: AVS-007)
 
-그대로 복사해 MORAI 기술지원에 보낼 수 있는 문의문. (한국어/영문 병기)
+<!-- INTERNAL: 그대로 복사해 MORAI 기술지원에 보낼 수 있는 문의문(한국어/영문 병기). SENT 동결 시 INTERNAL 블록 제거. -->
 
 ## 1. 요약 (3줄 이내)
 <!-- 원 초안에 3줄 요약 없음 — 발송 전 작성. 증거 보강은 D1~D4 실측 후 별도 작업. -->
@@ -39,8 +39,8 @@
   즉 **SIM의 ROS bridge가 ROS1 헤더(seq 포함) 포맷으로 발행**하여 ROS2 rosbridge_suite가 거부합니다.
   → ROS2 환경에서 rosbridge로 쓰려면 SIM이 **ROS2 헤더(seq 없음)로 발행**하도록 옵션이 필요합니다.
 
-저장소 내 근거 경로 (내부 추적용 — 발송본에서는 경로 제거 가능):
-- `runbooks/avs-007_ros2_native_report.md`, `~/avstack/logs/avs007_ros2cs_abi_mismatch_20260703.md`
+<!-- INTERNAL: 저장소 내 근거 경로 — runbooks/avs-007_ros2_native_report.md, ~/avstack/logs/avs007_ros2cs_abi_mismatch_20260703.md
+     (발송 전 evidence 동결 §4.2 규약 적용 예정: vendor/morai/evidence/ 로 사본). SENT 동결 시 이 블록 제거. -->
 
 ## 5. 질문 (번호, 예/아니오로 답할 수 있게)
 1. 26.R1.H3의 ROS2 Native(ros2cs)를 Linux/Humble에서 사용하려면 **정확히 어떤 환경**이 필요합니까?

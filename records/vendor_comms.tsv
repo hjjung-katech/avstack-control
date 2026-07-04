@@ -2,3 +2,5 @@ comm_id	date	direction	channel	counterpart	subject	related_issues	status	evidenc
 MORAI-001	2026-07-04	OUT	email	MORAI support	ROS2 Native ros2cs 예외 및 rosbridge header.seq 질의	AVS-007	DRAFT	vendor/morai/OUTBOX/MORAI-001_avs007_inquiry.md	§1/§3 보강 승인 후 사용자 발송	2026-07-06
 MORAI-002	2026-07-04	OUT	email	MORAI support	sourcedefender 보호 Python API 지원버전·설치·라이선스 질의	AVS-006	TODO_DRAFT		초안 작성	
 MORAI-003	2026-07-04	OUT	email	MORAI support	기능요청: ROS 연결 CLI/설정파일화·시나리오시작 자동Connect·런처 자동기동 인자·Headless 로드맵	R18	TODO_DRAFT		초안 작성(001 회신 흐름에 병행)	
+MORAI-003	2026-07-04	OUT	email	MORAI support	기능요청: ROS 연결 CLI/설정파일화·시나리오시작 자동Connect·런처 자동기동 인자·Headless 로드맵; sourcedefender 제거 정책·API 공식 아카이브	R18	TODO_DRAFT		AMEND: subject 에 sourcedefender 제품개선 추가(MORAI-002 §6 이관)	
+MORAI-002	2026-07-04	OUT	email	MORAI support	sourcedefender 보호 Python API 지원버전·설치·라이선스 질의	AVS-006	DRAFT	vendor/morai/OUTBOX/MORAI-002_avs006_inquiry.md	AMEND: 초안 완료(DRAFT); 사용자 검토·발송	
