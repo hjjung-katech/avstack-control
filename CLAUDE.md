@@ -1,5 +1,7 @@
 # AVStack Control
 
+> 세션 시작 시 PROJECT_STATUS.md 를 먼저 읽고, 종료 시 갱신한다 (8장 인수인계 규약).
+
 MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로젝트.
 이 저장소(~/avstack-control)는 Git 관리 대상이며, 실행 데이터는 ~/avstack(Git 제외)에 있다.
 
