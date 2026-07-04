@@ -3,7 +3,9 @@
 <!-- INTERNAL: 그대로 복사해 MORAI 기술지원에 보낼 수 있는 문의문(한국어/영문 병기). SENT 동결 시 INTERNAL 블록 제거. -->
 
 ## 1. 요약 (3줄 이내)
-<!-- 원 초안에 3줄 요약 없음 — 발송 전 작성. 증거 보강은 D1~D4 실측 후 별도 작업. -->
+26.R1.H3를 host ROS2 Humble로 붙이는 두 경로(Native/rosbridge)가 모두 데이터 수신 단계에서 막힙니다.
+ROS2 Native는 Connect 시 SIM이 `librmw_fastrtps_cpp std::bad_cast`로 즉시 종료합니다(ros2cs standalone=0, humble 2023-03-31 빌드; host 버전 정합으로도 미해결).
+rosbridge(ROS 모드)는 연결·토픽 생성까지 되나 SIM이 ROS1 헤더(`header.seq`)로 발행해 ROS2 rosbridge_suite가 전 메시지를 거부, 데이터가 0입니다.
 
 ## 2. 환경
 - MORAI SIM: Drive **26.R1.H3** (`Simulator_v.R1.260701.H3_Linux`)
@@ -11,7 +13,16 @@
 - 목표: Ego 상태·센서 토픽을 host ROS2 Humble로 수신(외부 알고리즘/Autoware 연동).
 
 ## 3. 재현 절차
-<!-- 원 초안에 번호 매긴 재현 절차 없음 — 발송 전 작성(3회 재현 명시). -->
+**A. ROS2 Native**
+1. SIM Network Settings에서 ROS2를 활성화하고 Connect.
+2. → SIM이 즉시 종료. Player.log에 §4-A의 std::bad_cast(host ROS2 소싱 시) / `librcl not found`(미소싱 시).
+
+**B. rosbridge**
+1. host에서 `rosbridge_server`(rosbridge_suite 2.0.7) 기동.
+2. SIM Network Settings의 Simulator/Ego/Sensor를 ROS(bridge) 127.0.0.1:9090으로 각각 Connect.
+3. → 토픽은 생성되나 데이터 0. rosbridge_server 로그에 §4-B의 `header.seq` 거부.
+
+- 재현성: **결정론적으로 재현됨** — 두 경로 모두 확률적 요소가 없으며 Player.log/rosbridge 로그(§4)로 직접 검증 가능. (시도: [사용자 기입: N회 시도])
 
 ## 4. 실측 증거
 
@@ -39,8 +50,8 @@
   즉 **SIM의 ROS bridge가 ROS1 헤더(seq 포함) 포맷으로 발행**하여 ROS2 rosbridge_suite가 거부합니다.
   → ROS2 환경에서 rosbridge로 쓰려면 SIM이 **ROS2 헤더(seq 없음)로 발행**하도록 옵션이 필요합니다.
 
-<!-- INTERNAL: 저장소 내 근거 경로 — runbooks/avs-007_ros2_native_report.md, ~/avstack/logs/avs007_ros2cs_abi_mismatch_20260703.md
-     (발송 전 evidence 동결 §4.2 규약 적용 예정: vendor/morai/evidence/ 로 사본). SENT 동결 시 이 블록 제거. -->
+<!-- INTERNAL: 근거 사본(git 동결) vendor/morai/evidence/avs007_ros2cs_abi_mismatch_20260703.md;
+     분석 리포트 runbooks/avs-007_ros2_native_report.md. SENT 동결 시 이 블록 제거. -->
 
 ## 5. 질문 (번호, 예/아니오로 답할 수 있게)
 1. 26.R1.H3의 ROS2 Native(ros2cs)를 Linux/Humble에서 사용하려면 **정확히 어떤 환경**이 필요합니까?
