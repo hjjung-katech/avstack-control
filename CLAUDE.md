@@ -24,6 +24,9 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 - Stage 03.7(경계 감지) 통과 전에는 Batch 파이프라인(05.5) 구축을 시작하지 않는다.
 - Stage 05.7 통과 전에는 Autoware/Docker 작업을 시작하지 않는다.
 - TSV는 append-only. 과거 행 정정은 AMEND: 접두어를 단 새 행 추가로 하며, 동일 stage/id에 행이 여러 개면 최신 행이 유효하다.
+- 벤더 커뮤니케이션 상태 전이(DRAFT/SENT/ANSWERED 등)는 records/vendor_comms.tsv에 `AMEND:` 접두 새 행으로 append한다(동일 comm_id 최신 행이 유효). in-place 편집 금지.
+- vendor/*/OUTBOX 초안의 발송 금지 내용(제목 아래 안내문·"내부 추적용" 경로·스레드 분리 주석 등)은 `<!-- INTERNAL: ... -->` 로 감싸고, SENT 동결 시 이 블록을 제거한 발송본을 저장한다.
+- 문의에 인용된 증거는 발송 전 vendor/<사>/evidence/ 에 사본을 동결한다(대외 주장의 근거는 git 관리 영역에 있어야 한다).
 
 ## 디버깅 규칙 (미지/벤더 서브시스템 — AVS-007 회고에서 도출)
 - 실물 먼저: 결론·변경 전에 실물(메타데이터/`.so` 의존성/버전/원본 로그)을 조사한다. 파일명·외부 문서·확장자만으로 메커니즘을 단정하지 않는다.
