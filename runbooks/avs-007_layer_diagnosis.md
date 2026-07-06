@@ -216,9 +216,14 @@ timeout 15 ros2 topic hz /Ego_topic
 
 ## 5. 종합 판정 매트릭스
 
+> **[결과 확정 2026-07-06]** E2(재검증 3회)로 **D1 = FAIL** 확정: SOURCE_ROS2 소싱 실행 시 SIM 이 startup
+> `std::bad_cast` 로 종료하며 RTPS(UDP 74xx) 미바인딩 → **DDS participant 미생성**(ss 폴링 0). 매트릭스 1행 적용.
+> 하위 계층 확정이므로 **D2~D4 는 불필요(종결)**. D5(제어 역방향)만 별도 가치 판단으로 남김.
+> 귀속 = **벤더(ros2cs 미동작)**. 증거: `vendor/morai/evidence/avs007_recheck_20260706_*`.
+
 | D1 | D2 | D3 | D4 | 최종 귀속 | 후속 액션 |
 |---|---|---|---|---|---|
-| FAIL | — | — | — | **벤더 (ros2cs 미동작)** | MORAI 문의에 D1 실측 첨부, AVS-007 evidence 갱신, Stage 05 BLOCKED 유지 |
+| **FAIL ✅확정** | 불필요 | 불필요 | 불필요 | **벤더 (ros2cs 미동작)** | MORAI-001 에 D1 실측 첨부(완료), AVS-007 AMEND(완료), Stage 05 BLOCKED 유지 |
 | PASS | Domain/RMW로 해결 | — | — | **환경 설정** | env 표준 변경 ADR, Stage 05 재시도 → PASS 가능 |
 | PASS | PASS | QoS로 해결 | — | **진단 도구 (착시)** | Stage 05 판정 정정, verify_topics.sh 보강, 오진 회고 기록 |
 | PASS | PASS | FAIL | H4 채택 | **lazy publisher 특성** | 문서화 + rosbag 상시 구독 전제 확인, Stage 05 조건부 PASS |

@@ -39,10 +39,10 @@ case "$PHASE" in
     echo "-- topic list -t --"; timeout -s KILL 8 ros2 topic list -t 2>/dev/null | tee "${BASE}_topics.txt" | grep -iE "ego|gps|clock" || echo "  (MORAI 토픽 없음)"
     echo "-- /Ego_topic echo 15s (0건 기대) --"
     timeout -s KILL 16 ros2 topic echo /Ego_topic --qos-reliability best_effort > "${BASE}_echo.txt" 2>&1 || true
-    RX=$(grep -cE "velocity|position|header|---" "${BASE}_echo.txt" 2>/dev/null || echo 0)
+    RX=$(grep -cE "velocity|position|header|---" "${BASE}_echo.txt" 2>/dev/null); RX=${RX:-0}
     echo "  echo 수신 라인: $RX  ($([ "$RX" -eq 0 ] && echo '0건 → 가설 부합' || echo '데이터 수신됨 — 재판단'))"
     echo "-- rosbridge 로그 header.seq 거부 카운트 --"
-    SEQ=$(grep -cE "header.seq|does not have a field" "${BASE}_rosbridge.log" 2>/dev/null || echo 0)
+    SEQ=$(grep -cE "header.seq|does not have a field" "${BASE}_rosbridge.log" 2>/dev/null); SEQ=${SEQ:-0}
     echo "  거부 메시지: $SEQ 개"; grep -m2 "does not have a field" "${BASE}_rosbridge.log" 2>/dev/null | sed 's/^/    /'
     ;;
   cleanup)

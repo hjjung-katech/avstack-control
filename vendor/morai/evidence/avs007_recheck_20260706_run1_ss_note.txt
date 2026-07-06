@@ -1,0 +1,2 @@
+E2 run1 ss 폴링 결과: RTPS(UDP 7400-7500) 포트 관측 0건.
+SIM 이 std::bad_cast 로 startup 종료하며 DDS participant/port 를 바인딩하지 않음(D1=FAIL).

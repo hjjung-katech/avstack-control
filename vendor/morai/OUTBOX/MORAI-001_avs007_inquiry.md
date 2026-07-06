@@ -4,7 +4,7 @@
 
 ## 1. 요약 (3줄 이내)
 26.R1.H3를 host ROS2 Humble로 붙이는 두 경로(Native/rosbridge)가 모두 데이터 수신 단계에서 막힙니다.
-ROS2 Native는 Connect 시 SIM이 `librmw_fastrtps_cpp std::bad_cast`로 즉시 종료합니다(ros2cs standalone=0, humble 2023-03-31 빌드; host 버전 정합으로도 미해결).
+ROS2 Native는 host ROS2 소싱 실행 시 SIM이 **startup에서** `librmw_fastrtps_cpp std::bad_cast`로 즉시 종료합니다(ros2cs standalone=0, humble 2023-03-31 빌드; host 버전 정합으로도 미해결).
 rosbridge(ROS 모드)는 연결·토픽 생성까지 되나 SIM이 ROS1 헤더(`header.seq`)로 발행해 ROS2 rosbridge_suite가 전 메시지를 거부, 데이터가 0입니다.
 
 ## 2. 환경
@@ -13,21 +13,24 @@ rosbridge(ROS 모드)는 연결·토픽 생성까지 되나 SIM이 ROS1 헤더(`
 - 목표: Ego 상태·센서 토픽을 host ROS2 Humble로 수신(외부 알고리즘/Autoware 연동).
 
 ## 3. 재현 절차
-**A. ROS2 Native**
-1. SIM Network Settings에서 ROS2를 활성화하고 Connect.
-2. → SIM이 즉시 종료. Player.log에 §4-A의 std::bad_cast(host ROS2 소싱 시) / `librcl not found`(미소싱 시).
+**A. ROS2 Native (host ROS2 소싱 실행 시 startup 크래시)**
+1. host ROS2 Humble 소싱 상태로 SIM 기동 → 지도 로드 → Start.
+2. → SIM이 **startup(ros2cs preload)에서 즉시 종료**. Player.log에 §4-A의 std::bad_cast.
+3. (대조) 미소싱 기동 시 SIM은 정상 뜨나 ROS2 Connect에서 `librcl not found` → Disconnect.
+→ **3회 재현 (2026-07-06)**. DDS 계층: 종료까지 SIM이 RTPS(UDP 74xx) 미바인딩 = participant 미생성.
 
 **B. rosbridge**
 1. host에서 `rosbridge_server`(rosbridge_suite 2.0.7) 기동.
 2. SIM Network Settings의 Simulator/Ego/Sensor를 ROS(bridge) 127.0.0.1:9090으로 각각 Connect.
-3. → 토픽은 생성되나 데이터 0. rosbridge_server 로그에 §4-B의 `header.seq` 거부.
+3. → 토픽은 생성(typed)되나 수신 데이터 0. rosbridge_server 로그에 §4-B의 `header.seq` 거부 수만 건.
+→ **3회 재현 (2026-07-06)**.
 
-- 재현성: **결정론적으로 재현됨** — 두 경로 모두 확률적 요소가 없으며 Player.log/rosbridge 로그(§4)로 직접 검증 가능. (시도: [사용자 기입: N회 시도])
+- 재현성: **결정론적으로 재현됨** — 두 경로 모두 확률적 요소가 없으며 Player.log/rosbridge 로그(§4)로 직접 검증 가능.
 
 ## 4. 실측 증거
 
 **A. ROS2 Native (Network Settings의 ROS2)**
-- Connect 시 SIM이 즉시 종료. Player.log:
+- host ROS2 소싱 실행 시 SIM이 **startup(ros2cs preload)에서 즉시 종료**. Player.log:
   ```
   ROS2 version in 'ros2cs' metadata doesn't match currently sourced version.
   [rcl]: failed to load shared library 'librmw_fastrtps_cpp.so' due to std::bad_cast,
@@ -35,6 +38,8 @@ rosbridge(ROS 모드)는 연결·토픽 생성까지 되나 SIM이 ROS1 헤더(`
   ```
 - 확인: SIM `metadata_ros2cs.xml` = `<ros2>humble</ros2> <standalone>0</standalone>` (2023-03-31, ros2cs 1.3.0).
   standalone=0 이라 host ROS2 필요. **host에 ROS2 Humble을 소싱하면 위 std::bad_cast로 종료**, 소싱 안 하면 `librcl.so not found`.
+- **DDS 계층 실측 (2026-07-06, 3회)**: 기동~종료 구간 SIM이 RTPS discovery(UDP 74xx) 포트를 바인딩하지 않음
+  → **DDS participant 미생성** (ss 폴링 0건; rmw 로드 실패로 participant 생성 자체 불가). ss 로그 첨부 가능.
 - **버전 정합 시도(무효)**: 2023-03-13 스냅샷의 Fast-DDS(2.6.4/rmw 6.2.2/typesupport 2.2.0)를 SIM에만 적용해도
   **동일한 std::bad_cast**. (동일 라이브러리로 일반 rclpy 프로세스는 정상.) → host ROS2 버전 문제가 아님.
 
@@ -50,7 +55,9 @@ rosbridge(ROS 모드)는 연결·토픽 생성까지 되나 SIM이 ROS1 헤더(`
   즉 **SIM의 ROS bridge가 ROS1 헤더(seq 포함) 포맷으로 발행**하여 ROS2 rosbridge_suite가 거부합니다.
   → ROS2 환경에서 rosbridge로 쓰려면 SIM이 **ROS2 헤더(seq 없음)로 발행**하도록 옵션이 필요합니다.
 
-<!-- INTERNAL: 근거 사본(git 동결) vendor/morai/evidence/avs007_ros2cs_abi_mismatch_20260703.md;
+<!-- INTERNAL: 근거 사본(git 동결) vendor/morai/evidence/ —
+     avs007_ros2cs_abi_mismatch_20260703.md, 재검증(2026-07-06): avs007_recheck_..._run1_player.log,
+     avs007_recheck_..._run1_ss_note.txt(D1 RTPS 0), avs007b_recheck_..._run1_rosbridge_sample.log(header.seq 거부).
      분석 리포트 runbooks/avs-007_ros2_native_report.md. SENT 동결 시 이 블록 제거. -->
 
 ## 5. 질문 (번호, 예/아니오로 답할 수 있게)

@@ -1,1 +1,4 @@
 date	command	cwd	evidence_path	note
+2026-07-06	E1: sourcedefender install recheck x3 (morai-osc py3.7.3)	~/avstack-control	vendor/morai/evidence/avs006_recheck_20260706_run1.log	3회 결정론적 실패, PyPI 9릴리스 전부>=3.9/3.10
+2026-07-06	E2: ROS2 native SOURCE_ROS2 startup crash recheck x3 + D1	~/avstack-control	vendor/morai/evidence/avs007_recheck_20260706_run1_player.log	3회 std::bad_cast, RTPS 74xx 0=participant 미생성(D1 FAIL)
+2026-07-06	E3: rosbridge header.seq data-0 recheck x3	~/avstack-control	vendor/morai/evidence/avs007b_recheck_20260706_run1_rosbridge_sample.log	3회 client_count>0/토픽생성/echo 0/header.seq 거부 28976건
