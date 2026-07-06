@@ -236,6 +236,12 @@ Safe Distance, Time To Collision, Way-off Distance, Lateral/Longitudinal Acceler
 
 MORAI SIM: Drive 26.R1.0에 ROS2 Native 통신 인터페이스, ROS2 메시지, ROS2 설정 UI가 추가되었다.
 
+> **[ERRATUM 2026-07-06]** 실측 반증 — 26.R1.H3의 ROS2 Native(ros2cs, standalone=0)는 host ROS2 Humble과
+> ABI 불일치로 SIM이 startup에서 `std::bad_cast` 종료(DDS participant 미생성, D1=FAIL, 3회 재현). rosbridge
+> 경로는 SIM이 ROS1 헤더(`header.seq`)로 발행해 rosbridge_suite가 전 메시지 거부(데이터 0). 26.R1.H3에서
+> ROS2 Native/rosbridge 무인 연동은 현재 불가. **AVS-007**(D1=FAIL 확정), MORAI 회신 대기(MORAI-001).
+> 무인 데이터 경로에서 ROS2 Native 제외(**ADR-009**).
+
 ### 5.9 Rosbag Replay
 
 MORAI SIM은 Rosbag을 이용해 Ego 주행 데이터 및 주변 환경 데이터를 저장·재현하는 기능을 제공한다. Rosbag은 재현성 확보를 위한 핵심 artifact이다.
@@ -597,6 +603,10 @@ results/
 | eventlog/statelog | 공식 산출물, 시나리오 이벤트 정합 | 스키마 미공개, 필드 제한 가능 | **정본** (Runner 지표) |
 | rosbag2 | 고주파, 재생 가능, 표준 도구 | QoS/topic 변경 리스크 | 상세 분석·재현 |
 | API polling | 의존성 최소, 즉시 확인 | 주기 제한(gRPC 지연) | fallback·경계 감지 |
+
+> **[ERRATUM 2026-07-06, ADR-009]** 무인/유인 구분 추가 — **무인 경로(주)**: eventlog/statelog(정본) + API polling.
+> **유인 세션 한정**: rosbag2(ROS2 Native 전제인데 AVS-007로 무인 불가). 무인 L6 성숙도 전제에서 ROS2 Native 제외.
+> ([v1.1] statelog 스키마는 `runbooks/log_schema_inventory.md`에서 실측 확정 — 지표 6종 전부 statelog 존재.)
 
 ### 9.5 [v1.1 신규] 무결성 manifest
 
