@@ -1,0 +1,16 @@
+# rosbridge run1 대표 샘플 (원본 49068줄에서 축약)
+## 기동
+[INFO] rosbridge_websocket 시작 (port=9090). SIM Network Settings=ROS(bridge), Bridge IP=127.0.0.1, 포트 일치.
+[INFO] [rosbridge_websocket-1]: process started with pid [448121]
+[rosbridge_websocket-1] [WARN] [1783296918.755706017] [rosbridge_websocket]: The 'default_call_service_timeout' parameter is currently set to 0.0, which means service calls will block indefinitely if no response is received. Please note that in the Jazzy and later releases, the default value for this parameter will be updated to 5.0 seconds.
+## header.seq 거부 — 토픽/타입별 유일 메시지
+/CollisionData  ->  Message type morai_msgs/CollisionData does not have a field header.seq
+/Ego_topic  ->  Message type morai_msgs/EgoVehicleStatus does not have a field header.seq
+/gps  ->  Message type morai_msgs/GPSMessage does not have a field header.seq
+/InsnStatus  ->  Message type morai_msgs/IntersectionStatus does not have a field header.seq
+/Object_topic  ->  Message type morai_msgs/ObjectStatusList does not have a field header.seq
+/ReplayInfo_topic  ->  Message type morai_msgs/ReplayInfo does not have a field header.seq
+/sim/process/state/msg/MoraiSimProcStatus  ->  Message type morai_msgs/MoraiSimProcStatus does not have a field header.seq
+/VehicleCollisionData  ->  Message type morai_msgs/VehicleCollisionData does not have a field header.seq
+## 총 거부 건수(header.seq)
+28976

@@ -1,0 +1,12 @@
+=== RUN 1 2026-07-06T08:37:43+09:00 ===
+Python 3.7.3
+pip 24.0 from /home/hjjung/miniconda3/envs/morai-osc/lib/python3.7/site-packages/pip (python 3.7)
+Files removed: 4
+ERROR: Ignored the following versions that require a different python version: 15.0.19 Requires-Python !=2.*,>=3.9; 15.0.20 Requires-Python !=2.*,>=3.9; 15.0.21 Requires-Python !=2.*,>=3.9; 15.0.22 Requires-Python !=2.*,>=3.9; 16.0.61 Requires-Python >=3.10; 16.0.62 Requires-Python >=3.10; 16.0.63 Requires-Python >=3.10; 16.0.64 Requires-Python >=3.10; 16.0.65 Requires-Python >=3.10
+ERROR: Could not find a version that satisfies the requirement sourcedefender (from versions: none)
+ERROR: No matching distribution found for sourcedefender
+install_exit=1
+WARNING: pip index is currently an experimental command. It may be removed/changed in a future release without prior warning.
+ERROR: No matching distribution found for sourcedefender
+index_exit=1
+not installed
