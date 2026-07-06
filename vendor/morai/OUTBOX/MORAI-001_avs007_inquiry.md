@@ -60,7 +60,7 @@ rosbridge(ROS 모드)는 연결·토픽 생성까지 되나 SIM이 ROS1 헤더(`
      avs007_recheck_..._run1_ss_note.txt(D1 RTPS 0), avs007b_recheck_..._run1_rosbridge_sample.log(header.seq 거부).
      분석 리포트 runbooks/avs-007_ros2_native_report.md. SENT 동결 시 이 블록 제거. -->
 
-## 5. 질문 (번호, 예/아니오로 답할 수 있게)
+## 5. 질문
 1. 26.R1.H3의 ROS2 Native(ros2cs)를 Linux/Humble에서 사용하려면 **정확히 어떤 환경**이 필요합니까?
    (요구 ROS2 배포/버전, `librmw_fastrtps_cpp std::bad_cast` 회피 방법, 또는 **standalone ros2cs 빌드** 제공 가능 여부)
 2. rosbridge(ROS 모드)로 쓸 경우, SIM이 기대하는 **rosbridge_suite 버전**과 **정확한 morai 메시지 정의 세트**

@@ -53,7 +53,7 @@ rosbridge(ROS 모드)는 연결·토픽 생성까지 되나 SIM이 ROS1 헤더(`
   즉 **SIM의 ROS bridge가 ROS1 헤더(seq 포함) 포맷으로 발행**하여 ROS2 rosbridge_suite가 거부합니다.
   → ROS2 환경에서 rosbridge로 쓰려면 SIM이 **ROS2 헤더(seq 없음)로 발행**하도록 옵션이 필요합니다.
 
-## 5. 질문 (번호, 예/아니오로 답할 수 있게)
+## 5. 질문
 1. 26.R1.H3의 ROS2 Native(ros2cs)를 Linux/Humble에서 사용하려면 **정확히 어떤 환경**이 필요합니까?
    (요구 ROS2 배포/버전, `librmw_fastrtps_cpp std::bad_cast` 회피 방법, 또는 **standalone ros2cs 빌드** 제공 가능 여부)
 2. rosbridge(ROS 모드)로 쓸 경우, SIM이 기대하는 **rosbridge_suite 버전**과 **정확한 morai 메시지 정의 세트**

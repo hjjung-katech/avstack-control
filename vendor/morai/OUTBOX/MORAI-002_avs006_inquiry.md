@@ -34,7 +34,7 @@ ERROR: No matching distribution found for sourcedefender
 <!-- INTERNAL: 근거 사본(git 동결) vendor/morai/evidence/avs006_sourcedefender_py37_block_20260703.md;
      재검증(2026-07-06): avs006_recheck_20260706_run1.log, avs006_recheck_20260706_pypi_snapshot.json. SENT 동결 시 이 블록 제거. -->
 
-## 5. 질문 (번호, 예/아니오로 답할 수 있게)
+## 5. 질문
 1. **(최우선)** 26.R1.H3와 페어링되는 최신 OpenSCENARIO API 버전이 22.R3가 맞습니까?
    sourcedefender 제약이 없거나 최신 Python을 지원하는 더 최신 API 배포가 있다면 그쪽 안내를 우선 부탁드립니다.
    (이 답에 따라 아래 질문이 전부 무효화될 수 있습니다.)

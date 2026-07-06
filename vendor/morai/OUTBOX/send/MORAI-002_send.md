@@ -29,7 +29,7 @@ ERROR: No matching distribution found for sourcedefender
 ```
 - PyPI 실태(pypi.org/pypi/sourcedefender/json, **2026-07-06**): 릴리스 **9개** — 15.0.19~22(`!=2.*,>=3.9`), 16.0.61~**65**(`>=3.10`),
   전부 3.9/3.10 이상 요구, **3.7 호환(cp37) 0개** → 3.7 지원 버전이 PyPI에 없음. (sourcedefender 개발사 문서(공식 사이트)는 "3.7–3.14 지원" 주장, 실제 배포와 불일치.)
-## 5. 질문 (번호, 예/아니오로 답할 수 있게)
+## 5. 질문
 1. **(최우선)** 26.R1.H3와 페어링되는 최신 OpenSCENARIO API 버전이 22.R3가 맞습니까?
    sourcedefender 제약이 없거나 최신 Python을 지원하는 더 최신 API 배포가 있다면 그쪽 안내를 우선 부탁드립니다.
    (이 답에 따라 아래 질문이 전부 무효화될 수 있습니다.)
