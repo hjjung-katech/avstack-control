@@ -3,13 +3,14 @@
 | 항목 | 내용 |
 |---|---|
 | 문서명 | 작성체계·업무관리·벤더 커뮤니케이션 관리 규약 |
-| 버전 | v1.1 |
+| 버전 | v1.2 |
 | 작성일 | 2026-07-04 |
 | 위치 | `~/avstack-control/runbooks/doc_and_vendor_management.md` |
 | 성격 | **내구성 규칙** — 상태가 아니라 체계를 정의 (상태는 PROJECT_STATUS.md) |
 
 **Change Log**
 - C1 (2026-07-04): §4.2 에 두 규약 추가 — (1) OUTBOX 초안의 내부 전용 내용은 `<!-- INTERNAL -->` 주석 표기, SENT 동결 시 제거한 발송본 저장. (2) 문의 인용 증거는 발송 전 `vendor/<사>/evidence/` 에 사본 동결.
+- C2 (2026-07-06): §4.1 에 **2층 키 규칙** 추가 — 내부 키 `comm_id`(불변) + 외부 참조 키 `external_ref`(대외 노출용). vendor_comms.tsv 에 `external_ref` 컬럼 신설(schema-migration).
 
 ---
 
@@ -70,10 +71,13 @@ avstack-control/
 ### 4.1 vendor_comms.tsv 스키마 (원장)
 
 ```text
-comm_id	date	direction	channel	counterpart	subject	related_issues	status	evidence_path	next_action	due
-MORAI-001	2026-07-04	OUT	email	MORAI support	ROS2 Native ros2cs 예외 및 rosbridge header.seq 질의	AVS-007	DRAFT	vendor/morai/OUTBOX/MORAI-001_avs007_inquiry.md	사용자 발송	2026-07-06
+comm_id	external_ref	date	direction	channel	counterpart	subject	related_issues	status	evidence_path	next_action	due
+MORAI-001	KATECH-SIM-ROS2	2026-07-04	OUT	email	MORAI support	ROS2 Native ros2cs 예외 및 rosbridge header.seq 질의	AVS-007	DRAFT	vendor/morai/OUTBOX/MORAI-001_avs007_inquiry.md	사용자 발송	2026-07-06
 ```
 
+- **2층 키 규칙 (C2)**: `comm_id`(예: MORAI-001)는 **내부 키**로 불변·추적 전용. `external_ref`(예: KATECH-SIM-ROS2)는
+  **외부 참조 키**로 대외 문서·파일명·발송본에 노출한다. 발송용 산출물(PDF/zip)은 external_ref 기반으로 명명하고,
+  내부 comm_id 는 발송본에 노출하지 않는다(제목의 "(내부 ID...)" 제거 규약과 일관).
 - **status 수명주기**: `DRAFT → SENT → WAITING → ANSWERED → CLOSED` (+ `STALE`: due 초과 무응답 → 리마인드 발송 후 due 갱신)
 - **direction**: OUT(발송) / IN(수신). 회신 수신 시 동일 comm_id로 IN 행 추가 (스레드 유지).
 - **규칙**: SENT 전환은 실제 발송과 동시에만. 발송본은 그 시점 사본을 `SENT/YYYYMMDD_<comm_id>_<제목>.md`로 동결.
