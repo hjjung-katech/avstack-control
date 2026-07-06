@@ -20,3 +20,4 @@ __pycache__/
 *.pyc
 # 벤더 evidence 는 대외 문의 근거 — 타입(로그/이미지/pcap) 무관 추적 (§4.2 증거 동결 규약)
 !vendor/**/evidence/**
+!vendor/**/SENT/**
