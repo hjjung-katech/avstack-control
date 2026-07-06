@@ -9,3 +9,6 @@ MORAI-001	KATECH-SIM-ROS2	2026-07-06	OUT	email	MORAI support	ROS2 Native ros2cs 
 MORAI-002	KATECH-API-PY37	2026-07-06	OUT	email	MORAI support	sourcedefender 보호 Python API 지원버전·설치·라이선스 질의	AVS-006	DRAFT	vendor/morai/OUTBOX/MORAI-002_avs006_inquiry.md	AMEND: 재검증 완료(N=3, 2026-07-06) — 발송 준비 완료, 사용자 발송	2026-07-08
 MORAI-004		2026-07-06	OUT	email	MORAI CTO	과제협조요청 커버 (CTO 수신, 001/002 첨부)	AVS-006,AVS-007	DRAFT	vendor/morai/OUTBOX/MORAI-004_cover_cto.md	본문 붙여넣기 후 발송	2026-07-08
 MORAI-004		2026-07-06	OUT	email	MORAI CTO	과제협조요청 커버 (CTO 수신, 001/002 첨부)	AVS-006,AVS-007	DRAFT	vendor/morai/OUTBOX/MORAI-004_cover_cto.md	AMEND: 본문 반영·첨부 정합 확인 — 발송 준비 완료, 사용자 발송	2026-07-08
+MORAI-004		2026-07-06	OUT	email	MORAI CTO	과제협조요청 커버 (CTO 수신, 001/002 첨부)	AVS-006,AVS-007	SENT	vendor/morai/SENT/20260706_MORAI-004_cover_cto.md	AMEND: 발송 완료(2026-07-06) — 1차 회신 대기	2026-07-10
+MORAI-001	KATECH-SIM-ROS2	2026-07-06	OUT	email	MORAI CTO	ROS2 Native ros2cs 예외 및 rosbridge header.seq 질의	AVS-007	SENT	vendor/morai/SENT/20260706_KATECH-SIM-ROS2_기술상세.md	AMEND: MORAI-004 첨부로 발송 — 회신 대기	2026-07-10
+MORAI-002	KATECH-API-PY37	2026-07-06	OUT	email	MORAI CTO	sourcedefender 보호 Python API 지원버전·설치·라이선스 질의	AVS-006	SENT	vendor/morai/SENT/20260706_KATECH-API-PY37_기술상세.md	AMEND: MORAI-004 첨부로 발송 — 회신 대기	2026-07-10
