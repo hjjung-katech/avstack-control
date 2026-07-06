@@ -37,9 +37,9 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 - 뒤집히면 일괄 정정: 진단이 반전되면 이전 서술을 남기지 말고 관련 문서·스크립트·기본값을 같은 커밋에서 일괄 정정한다(모순 잔존 금지).
 
 ## 저장소 경계 (정본: runbooks/repo_boundaries.md, ADR-011)
-- 4층: ① oss3-scenarios(정의) → ② ~/avstack(실행·재생성물, **non-git**) → ③ avstack-control(판정 원장·절차·도구 정본) → ④ mgmt(요약). "정의는 git, 재생성물은 밖."
-- **avstack-control 안에 stages/·runbooks 판정본/·issues 같은 별도 판정 폴더를 만들지 않는다.** 스테이지·이슈·결정 판정은 `records/*.tsv`가 유일 권위(특히 판정은 `stages.tsv` 단일).
-- ~/avstack 및 STATUS 류 문서는 판정을 자체 보유하지 말고 `stages.tsv`를 포인터로 참조한다(AVS-008).
+- 5리포(별칭): **[SCEN]** oss3-scenarios(정의) → **[WS]** ~/avstack(실행·재생성물, **non-git**) → **[EVAL]** avstack-eval(평가 프레임워크 코드) → **[CONTROL]** avstack-control(판정 원장·절차·도구 정본, 본 리포) → **[MGMT]** oss3-mgmt(요약·계획). "정의는 git, 재생성물은 밖." 관리 리포 참조는 **[MGMT]**로 표기.
+- **[CONTROL] 안에 stages/·runbooks 판정본/·issues 같은 별도 판정 폴더를 만들지 않는다.** 스테이지·이슈·결정 판정은 `records/*.tsv`가 유일 권위(특히 판정은 `stages.tsv` 단일).
+- [WS] 및 STATUS 류 문서는 판정을 자체 보유하지 말고 `stages.tsv`를 포인터로 참조한다(AVS-008).
 
 ## Stage 현황 (Gate 통과 시 이 섹션을 갱신하고 stage 기록과 함께 커밋)
 - 00 Remote GPU: PASS
