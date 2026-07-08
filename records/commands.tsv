@@ -3,3 +3,5 @@ date	command	cwd	evidence_path	note
 2026-07-06	E2: ROS2 native SOURCE_ROS2 startup crash recheck x3 + D1	~/avstack-control	vendor/morai/evidence/avs007_recheck_20260706_run1_player.log	3회 std::bad_cast, RTPS 74xx 0=participant 미생성(D1 FAIL)
 2026-07-06	E3: rosbridge header.seq data-0 recheck x3	~/avstack-control	vendor/morai/evidence/avs007b_recheck_20260706_run1_rosbridge_sample.log	3회 client_count>0/토픽생성/echo 0/header.seq 거부 28976건
 2026-07-06	log schema inventory (V7.5): eventlog/statelog/result 실측 스키마 추출 (3 runs, KATRI Cut_In_1)	~/avstack-control	runbooks/log_schema_inventory.md	6개 지표 전부 statelog 존재; 경계=Storyboard start/stop; verdict=NONE; 빈로그=무효실행 시그니처
+2026-07-08	T-24 Step0: AVS-007 재현조건 확인 — 런처 SOURCE_ROS2는 /opt/ros만 소싱(native 소싱-후 셀 미실측 확인), 기존 빌드=main(26.R1과 84파일 차이)	~/avstack-control	runbooks/t24_vendor_diag_verification.md §1	실측 사각지대 확인 — 벤더 진단 재시험 가치 있음
+2026-07-08	T-24 Step1: MORAI-ROS2_morai_msgs 26.R1(c84d648) 클론→morai_ros2_msgs+morai_msgs(리네임) colcon build	~/avstack/ros2_ws_26r1	~/avstack/logs/avs007_t24_20260708_iface_after.txt (morai 76건); ~/avstack/runs/t24_morai_msgs_26r1_build_20260708.log	before 0건→after 76건. Step2(N2/R2)는 GUI 세션 대기
