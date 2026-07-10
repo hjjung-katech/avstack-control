@@ -2,7 +2,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 버전 | v1.1 (2026-07-10, **실행 완료 — 분기 C 판정**) |
+| 버전 | v2.0 (2026-07-10, **T-25 추가 — AVS-007 RESOLVED, 근본원인 H4 확정**) |
 | 배경 | MORAI 회신(2026-07-08, 양종범): AVS-007은 "ROS2용 morai_msg가 빌드 환경에 소싱되지 않아 발생 — 환경 설정 확인 권장". 이 진단의 재검증. |
 | 판정 | 맞으면 Stage 05 블로커 즉시 해소 / 틀리면 반증 증거로 재회신 |
 | 스크립트 | `scripts/recheck/t24_observe.sh` (셀 N2·R2), 런처 `ROS2_OVERLAY` opt-in 추가 |
@@ -90,7 +90,29 @@
 - GUI 절차 정정(실측): 런처 → **Start 먼저** → 이후 지도·차량 선택. §3의 "지도 로드 → Start" 표기는 구버전 순서.
   또한 SIM Network(Simulator/Ego/Sensor)는 이번 실측에서 **자동 연결**돼 있었음(수동 Connect 불요).
 
-## 5. 산출물 체크리스트 (실행 세션에서)
+## 6. T-25 — 벤더 2차 회신(2026-07-10) 재확인 요청의 검증과 근본원인 확정
+
+벤더 2차 회신: 자기 환경 정보(Ubuntu 22.04.5, fastdds 2.6.10/rmw 6.2.8 2025-07 sync, morai_msgs main 클론) +
+**"소싱 후 런처 바이너리 직접 실행" 재확인 요청** + rosbridge는 ROS2 경로 아님(공식) + API py3.13 재빌드 납품.
+
+| 셀 | 조건 | 결과 | 근거 |
+|---|---|---|---|
+| **N3: 벤더 방식** | humble+ros2_ws(main) 소싱, RMW 미설정, 바이너리 직접 | **동작** — SIM 생존(시그니처 無), ROS2 Connect 후 participant 생성·토픽 18종(`morai_ros2_msgs` 타입)·/ego_vehicle_status **50.2Hz**·CtrlCmd 제어 | avs007_t24_20260710_N3r1_* |
+| **T-25 3국면**(N3r2) | A drift / B freeze / C cmd | A: 무명령 크리프=중력 롤링(0.4→0.6m/s 가속). B: **설정창 열림=물리 일시정지**(10s 위치 완전 동결, 토픽은 마지막 값 반복). C: velocity 10km/h 명령→1.5s 내 2.778m/s 추종, stop→1s 내 0·위치 고정, 반복 재현 — **역방향 제어 확정** | avs007_t25_20260710_N3r2_track.log |
+| **N4: H4 확정** | N3 + `RMW_IMPLEMENTATION=rmw_fastrtps_cpp`만 추가 | **크래시** — Player.log:547 동일 std::bad_cast | avs007_t24_20260710_N4r1_* |
+
+**재판정 (v2.0 확정)**:
+- (사실) 크래시 트리거 = **`RMW_IMPLEMENTATION` 환경변수**. 설정 시 rcl `rmw_implementation_identifier_check`
+  경로가 열리고 그 dlopen에서 std::bad_cast(N4). 미설정 시 검사 생략 → 정상(N3). 우리 래퍼가 이 변수를
+  항상 설정했던 것이 N1·N2 크래시의 원인 — **소싱 여부·msgs 버전·host 패치버전과 전부 무관**
+  (T-24 분기 C "벤더 진단(미소싱) 틀림" 판정은 유지되나, 벤더의 재확인 요청이 결과적으로 원인 규명을 이끎).
+- (사실) rosbridge 경로는 벤더 공식 비지원(ROS1 포맷 발행) → 폐기. native가 유일 공식 경로.
+- **동작 레시피(Stage 05 표준)**: ① humble + morai msgs ws 소싱(오버레이), ② RMW_IMPLEMENTATION **미설정/해제**,
+  ③ 런처 기동(직접/래퍼 무관 — 래퍼 SOURCE_ROS2=1 이 이 레시피로 정정됨), ④ SIM: Start→지도/차량→**ROS2 Connect**,
+  ⑤ **설정창 모두 닫기**(열려 있으면 물리 일시정지), ⑥ 제어는 MultiEgoSetting ctrl_mode=16(auto)+gear=4 후 CtrlCmd.
+- 결과: **AVS-007 RESOLVED, Stage 05 PASS** (records/stages.tsv 2026-07-10).
+
+## 7. 산출물 체크리스트 (실행 세션에서)
 - [x] records/commands.tsv append (N2·R2 각 회차) — 2026-07-10 2행
 - [x] records/issues.tsv AVS-007 AMEND (매트릭스 결과 반영) — 2026-07-10
 - [x] 본 문서 §3 표 갱신 + 분기 판정 기입 — §4 분기 C

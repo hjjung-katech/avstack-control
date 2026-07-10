@@ -39,15 +39,15 @@ src26() { set +u; source /opt/ros/humble/setup.bash; source "$OVERLAY/install/se
 case "$PHASE" in
   start)
     echo "[T24 ${RUN} start] $(date -Is)"
-    if [[ "$RUN" == N2* ]]; then
+    if [[ "$RUN" == N* ]]; then   # N2=26.R1 오버레이(래퍼), N3=벤더 방식(직접 실행, main ws) — T-25
       # 런처 environ 캡처 — 이번엔 "소싱 여부"를 실물로 남긴다(기존 실측의 사각지대 해소)
       LPID=$(pgrep -f MoraiLauncher_Lin | head -1 || true)
       if [ -n "$LPID" ]; then
         tr '\0' '\n' < "/proc/$LPID/environ" | grep -E 'AMENT_PREFIX_PATH|LD_LIBRARY_PATH|RMW|ROS_' \
           > "${BASE}_launcher_environ.txt" 2>/dev/null
-        grep -q "ros2_ws_26r1" "${BASE}_launcher_environ.txt" \
-          && echo "  ✓ 런처 env 에 오버레이 확인(ros2_ws_26r1) → ${BASE}_launcher_environ.txt" \
-          || echo "  [중단권고] 런처 env 에 오버레이 없음 — ROS2_OVERLAY 지정 후 런처 재기동 요망"
+        grep -qE "ros2_ws_26r1|ros2_ws|morai_ws" "${BASE}_launcher_environ.txt" \
+          && echo "  ✓ 런처 env 에 morai msgs 오버레이 확인 → ${BASE}_launcher_environ.txt" \
+          || echo "  [중단권고] 런처 env 에 오버레이 없음 — 소싱 후 런처 재기동 요망"
       else
         echo "  [중단권고] MoraiLauncher 미실행 — 먼저 SOURCE_ROS2=1 ROS2_OVERLAY=... 로 런처 기동"
       fi
@@ -80,14 +80,14 @@ case "$PHASE" in
     echo "-- 시그니처(std::bad_cast/librmw) --"
     grep -nE "std::bad_cast|librmw_fastrtps_cpp|NativeRcl" "${BASE}_player.log" 2>/dev/null | head -5 || echo "  (시그니처 없음 ← 기존과 다름!)"
     echo "-- D1: RTPS 74xx 바인딩 --"
-    SIMBIND=$(grep -ciE "Simulator" "${BASE}_ss.log" 2>/dev/null || echo 0)
+    SIMBIND=$(grep -ciE "Simulator" "${BASE}_ss.log" 2>/dev/null || true); SIMBIND="${SIMBIND:-0}"
     echo "  Simulator 소유 74xx 라인: $SIMBIND $([ "$SIMBIND" -gt 0 ] && echo '← participant 생성! 기존 D1=FAIL 과 다름' || echo '(기존과 동일: 미바인딩)')"
     if [ -s "${BASE}_simpid_after.txt" ]; then
       echo "-- SIM 생존 → native 토픽 확인 --"; src26
       ros2 daemon stop >/dev/null 2>&1; ros2 daemon start >/dev/null 2>&1
       timeout -s KILL 8 ros2 topic list -t 2>/dev/null | tee "${BASE}_topics.txt" | grep -iE "ego|morai|gps" || echo "  (MORAI 토픽 없음)"
       timeout -s KILL 16 ros2 topic echo /Ego_topic --qos-reliability best_effort > "${BASE}_echo.txt" 2>&1 || true
-      N=$(grep -c "^---" "${BASE}_echo.txt" 2>/dev/null || echo 0); echo "  /Ego_topic 15s 수신: ${N}건"
+      N=$(grep -c "^---" "${BASE}_echo.txt" 2>/dev/null || true); N="${N:-0}"; echo "  /Ego_topic 15s 수신: ${N}건"
     fi
     echo "-- 증거 --"; ls -1 "${BASE}"_* 2>/dev/null | sed 's#.*/#  #'
     ;;
@@ -98,10 +98,10 @@ case "$PHASE" in
     echo "-- topic list --"; timeout -s KILL 8 ros2 topic list -t 2>/dev/null | tee "${BASE}_topics.txt" | grep -icE "." | xargs echo "  토픽 수:"
     echo "-- /Ego_topic echo 15s --"
     timeout -s KILL 16 ros2 topic echo /Ego_topic --qos-reliability best_effort > "${BASE}_echo.txt" 2>&1 || true
-    N=$(grep -c "^---" "${BASE}_echo.txt" 2>/dev/null || echo 0); echo "  수신: ${N}건 $([ "$N" -gt 0 ] && echo '← 데이터 흐름! 기존 0건과 다름' || echo '(기존과 동일: 0건)')"
+    N=$(grep -c "^---" "${BASE}_echo.txt" 2>/dev/null || true); N="${N:-0}"; echo "  수신: ${N}건 $([ "$N" -gt 0 ] && echo '← 데이터 흐름! 기존 0건과 다름' || echo '(기존과 동일: 0건)')"
     [ "$N" -gt 0 ] && { timeout -s KILL 12 ros2 topic hz /Ego_topic > "${BASE}_hz.txt" 2>&1 || true; grep -m2 "average rate" "${BASE}_hz.txt" || true; }
     echo "-- rosbridge seq 거부 카운트 --"
-    C=$(grep -c "does not have a field" "${BASE}_rosbridge.log" 2>/dev/null || echo 0)
+    C=$(grep -c "does not have a field" "${BASE}_rosbridge.log" 2>/dev/null || true); C="${C:-0}"
     echo "  거부 로그: ${C}건"; grep -m2 "does not have a field" "${BASE}_rosbridge.log" 2>/dev/null || true
     ;;
   ctrl)     # R2 전용 — 역방향 제어 (사용자 SIM 육안 확인 필요)

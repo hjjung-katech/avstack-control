@@ -25,22 +25,25 @@ if [ "${RUN_REMOTE:-0}" = "1" ]; then
   export XAUTHORITY="${XAUTHORITY:-$HOME/.Xauthority}"
 fi
 
-# ROS2 소싱: 기본 OFF (SIM 이 정상 시작하려면 ROS2 미소싱이어야 한다).
-#  - SIM 내장 ros2cs 는 standalone=0(humble, 2023-03-31 빌드)이라 ROS2 Native Connect 에는
-#    host ROS2 Humble 이 필요하지만, host Humble(2026 패치)과 fastrtps ABI 가 달라 소싱 시
-#    startup 에서 `std::bad_cast`(librmw_fastrtps_cpp 로드 실패)로 SIM 이 즉시 종료한다. → AVS-007.
-#  - 따라서 기본은 소싱하지 않아 SIM 이 정상 시작하도록 둔다(ROS2 Native 는 AVS-007 해결 후).
-#  - SOURCE_ROS2=1 로 켜면 실험적으로 소싱한다(현재는 SIM startup 실패 예상).
+# ROS2 소싱: SOURCE_ROS2=1 로 켠다 (AVS-007 해결 — T-25/H4, 2026-07-10 실측).
+#  - SIM startup `std::bad_cast` 의 트리거는 소싱 자체가 아니라 `RMW_IMPLEMENTATION` 환경변수였다:
+#    설정 시 rcl 의 rmw identifier 검사(rmw_implementation_identifier_check.c)가 열리고 그 경로의
+#    dlopen 에서 std::bad_cast → SIM 즉시 종료(N4 실측). 미설정 시 검사 생략 → 정상(N3 실측).
+#  - 따라서 이 블록은 RMW_IMPLEMENTATION 을 설정하지 않으며, 이미 설정돼 있으면 해제한다.
+#  - 동작 레시피(N3): humble + morai msgs ws 소싱 → SIM GUI 에서 ROS2 Connect → 수신 50Hz·제어 동작.
+#    주의: SIM 설정창(센서 등)이 열려 있는 동안 물리 일시정지(토픽은 마지막 값 반복) — T-25 B 실측.
 if [ "${SOURCE_ROS2:-0}" = "1" ] && [ -f /opt/ros/humble/setup.bash ]; then
   set +u; source /opt/ros/humble/setup.bash; set -u
-  export RMW_IMPLEMENTATION="${RMW_IMPLEMENTATION:-rmw_fastrtps_cpp}"
+  if [ -n "${RMW_IMPLEMENTATION:-}" ]; then
+    echo "[WARN] RMW_IMPLEMENTATION 설정됨(${RMW_IMPLEMENTATION}) — SIM startup 크래시 트리거(H4)라 해제함." >&2
+    unset RMW_IMPLEMENTATION
+  fi
   export ROS_LOCALHOST_ONLY=0
-  echo "[WARN] SOURCE_ROS2=1 — ROS2 소싱함. AVS-007(ABI) 미해결 시 SIM startup 실패 가능." >&2
-  # T-24(벤더 진단 검증): ROS2_OVERLAY=<ws/install 경로> 지정 시 오버레이(morai_msgs 등)를 추가 소싱.
-  # 벤더 회신(2026-07-08) "morai_msgs 미소싱" 진단의 native 경로 반증/검증용. 기본 무동작(opt-in).
-  if [ -n "${ROS2_OVERLAY:-}" ] && [ -f "$ROS2_OVERLAY/setup.bash" ]; then
+  # ROS2_OVERLAY=<ws/install 경로> 지정 시 오버레이(morai_ros2_msgs 등)를 추가 소싱 (기본: ~/avstack/ros2_ws).
+  ROS2_OVERLAY="${ROS2_OVERLAY:-$HOME/avstack/ros2_ws/install}"
+  if [ -f "$ROS2_OVERLAY/setup.bash" ]; then
     set +u; source "$ROS2_OVERLAY/setup.bash"; set -u
-    echo "[INFO] T-24: ROS2 overlay 소싱 → $ROS2_OVERLAY" >&2
+    echo "[INFO] ROS2 overlay 소싱 → $ROS2_OVERLAY" >&2
   fi
   # AVS-007 #2: FASTDDS_PREFIX 를 앞세워 SIM 만 SIM-빌드시점(2023) Fast-DDS 를 쓰게 함
   # (시스템 /opt/ros/humble 은 그대로, LD_LIBRARY_PATH 우선순위로 libfastrtps 등만 오버라이드).

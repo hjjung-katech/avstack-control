@@ -1,5 +1,11 @@
 # AVS-007 리포트 — MORAI 26.R1.H3 ROS2 Native(ros2cs) 연동 실패 분석 & 문의
 
+> **[ERRATUM 2026-07-10 — 해결됨, 본문 진단 일부 무효]** 근본원인은 ABI/버전이 아니라
+> **`RMW_IMPLEMENTATION` 환경변수**였다(설정 시 rcl rmw identifier 검사 경로에서 std::bad_cast — T-25 N4로 확정,
+> 미설정 시 정상 동작·50.2Hz 수신·CtrlCmd 제어). 본문의 H2(RTTI)/H3 추정과 "host 소싱 시 크래시" 서술은
+> 이 변수 설정을 전제한 관측이었다. rosbridge 경로는 벤더 공식 비지원 확인 → 폐기.
+> **현행 정본: `runbooks/t24_vendor_diag_verification.md` §6 (AVS-007 RESOLVED, Stage 05 PASS).**
+
 작성 2026-07-03. 목적: (1) 지금까지 진단의 비판적 재검토, (2) MORAI 문의용 정리, (3) 다음 단계.
 
 ## 1. 환경 (사실)
