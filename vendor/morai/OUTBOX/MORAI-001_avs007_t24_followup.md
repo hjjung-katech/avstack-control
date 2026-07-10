@@ -29,7 +29,7 @@
 종료까지 SIM은 RTPS(UDP 74xx) 미바인딩 = DDS participant 미생성.)
 
 **B. rosbridge**: 26.R1 정합 morai_msgs 소싱 상태에서 연결(client 33)·토픽 23종 생성은 정상이나
-수신 데이터 0건. rosbridge_server가 SIM 발행을 **`header.seq` 필드 불일치로 전량 거부(관찰창 15분간 53,686건)**.
+수신 데이터 0건. rosbridge_server가 SIM 발행을 **`header.seq` 필드 불일치로 전량 거부(약 15분 관찰창 누계 138,841건 — 첨부 3 분포와 일치)**.
 거부 9개 타입에 **표준 `tf2_msgs/TFMessage`가 포함**되어 있어 morai_msgs 패키지 유무·버전과 무관합니다
 (ROS2 `std_msgs/Header`에는 `seq` 필드가 없으므로, SIM이 ROS1 헤더 포맷으로 발행하는 한 어떤 msgs를
 소싱해도 해소되지 않는 구조입니다). 역방향(`/ctrl_cmd` CtrlCmd 10Hz 발행)도 차량 무반응이었습니다.

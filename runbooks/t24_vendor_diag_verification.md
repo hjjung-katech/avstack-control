@@ -41,7 +41,7 @@
 | N1: Native, 소싱 전(오버레이 없음) | SOURCE_ROS2=1 only | **FAIL** — startup std::bad_cast ×3, D1 participant 미생성 | E2(2026-07-06), vendor/morai/evidence/avs007_recheck_* |
 | R1: rosbridge, main-msgs | rosbridge 9090 + main 빌드 | **FAIL** — 토픽 생성/echo 0, header.seq 거부 28,976건 | E3(2026-07-06), avs007b_recheck_* |
 | **N2: Native, 26.R1 오버레이 소싱** | SOURCE_ROS2=1 + ROS2_OVERLAY | **FAIL (2026-07-10)** — 소싱 실물 증거(launcher environ에 ros2_ws_26r1 확인) 상태에서 startup std::bad_cast **동일 재현**(Player.log:547), D1 74xx 미바인딩. 기존과 동일하므로 r1 종결 | avs007_t24_20260710_N2r1_* (environ/player.log/ss) |
-| **R2: rosbridge, 26.R1 msgs** | AVSTACK_WS=ros2_ws_26r1 | **FAIL (2026-07-10)** — 연결 client 33·토픽 23 생성되나 echo 0건/15s, header.seq 거부 **53,686건**(9타입, 표준 tf2_msgs/TFMessage 포함). CtrlCmd 역방향 53건 발행에도 차량 무반응(SIM 상태 전제 미확정) | avs007_t24_20260710_R2r1_* (rosbridge.log/topics/echo/ctrlpub) |
+| **R2: rosbridge, 26.R1 msgs** | AVSTACK_WS=ros2_ws_26r1 | **FAIL (2026-07-10)** — 연결 client 33·토픽 23 생성되나 echo 0건/15s, header.seq 거부 observe 시점(11:41) 53,686건 → **15분 관찰창 누계 138,841건**(9타입, 표준 tf2_msgs/TFMessage 포함; 동결 샘플 분포 기준). CtrlCmd 역방향 53건 발행에도 차량 무반응(SIM 상태 전제 미확정) | avs007_t24_20260710_R2r1_* (rosbridge.log/topics/echo/ctrlpub) |
 
 ### GUI 세션 실행 순서 (사용자 인터리브, 회당 ~10분)
 
