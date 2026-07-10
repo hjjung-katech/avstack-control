@@ -1,0 +1,7 @@
+LD_LIBRARY_PATH=/home/hjjung/avstack/ros2_ws_26r1/install/morai_ros2_msgs/lib:/home/hjjung/avstack/ros2_ws_26r1/install/morai_msgs/lib:/opt/ros/humble/opt/rviz_ogre_vendor/lib:/opt/ros/humble/lib/x86_64-linux-gnu:/opt/ros/humble/lib
+ROS_PYTHON_VERSION=3
+ROS_DISTRO=humble
+ROS_VERSION=2
+ROS_LOCALHOST_ONLY=0
+RMW_IMPLEMENTATION=rmw_fastrtps_cpp
+AMENT_PREFIX_PATH=/home/hjjung/avstack/ros2_ws_26r1/install/morai_ros2_msgs:/home/hjjung/avstack/ros2_ws_26r1/install/morai_msgs:/opt/ros/humble

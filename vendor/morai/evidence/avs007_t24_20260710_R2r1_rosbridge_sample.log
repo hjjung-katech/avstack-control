@@ -1,0 +1,40 @@
+# rosbridge_server 로그 샘플 (원본 45MB: ~/avstack/logs/avs007_t24_20260710_R2r1_rosbridge.log)
+# 관찰창: 2026-07-10 11:30~11:45 KST, SIM 26.R1.H3 자동연결(client_count 33)
+
+## 기동부 (head 20)
+[env] RMW=rmw_fastrtps_cpp DOMAIN=0 LOCALHOST_ONLY=0
+[INFO] rosbridge_websocket 시작 (port=9090). SIM Network Settings=ROS(bridge), Bridge IP=127.0.0.1, 포트 일치.
+[INFO] [launch]: All log files can be found below /home/hjjung/.ros/log/2026-07-10-11-30-01-916563-t15p-dev-ubt-579656
+[INFO] [launch]: Default logging verbosity is set to INFO
+[INFO] [rosbridge_websocket-1]: process started with pid [579678]
+[INFO] [rosapi_node-2]: process started with pid [579680]
+[rosbridge_websocket-1] [WARN] [1783650602.567559847] [rosbridge_websocket]: The 'default_call_service_timeout' parameter is currently set to 0.0, which means service calls will block indefinitely if no response is received. Please note that in the Jazzy and later releases, the default value for this parameter will be updated to 5.0 seconds.
+[rosbridge_websocket-1] [WARN] [1783650602.567758654] [rosbridge_websocket]: The 'call_services_in_new_thread' parameter is currently set to False, which means service calls will block the main thread. Please note that in the Jazzy and later releases, the default value for this parameter will be updated to True.
+[rosbridge_websocket-1] [WARN] [1783650602.567921843] [rosbridge_websocket]: The 'send_action_goals_in_new_thread' parameter is currently set to False, which means sending action goals will block the main thread. Please note that in the Jazzy and later releases, the default value for this parameter will be updated to True.
+[rosbridge_websocket-1] [INFO] [1783650602.568957730] [rosbridge_websocket]: Rosbridge WebSocket server started on port 9090
+[rosbridge_websocket-1] [INFO] [1783651172.271532691] [rosbridge_websocket]: Calling services in existing thread
+[rosbridge_websocket-1] [INFO] [1783651172.271867533] [rosbridge_websocket]: Sending action goals in existing thread
+[rosbridge_websocket-1] [INFO] [1783651172.272546763] [rosbridge_websocket]: Client connected. 1 clients total.
+[rosbridge_websocket-1] [INFO] [1783651172.273001351] [rosbridge_websocket]: Calling services in existing thread
+[rosbridge_websocket-1] [INFO] [1783651172.273176731] [rosbridge_websocket]: Sending action goals in existing thread
+[rosbridge_websocket-1] [INFO] [1783651172.273582768] [rosbridge_websocket]: Client connected. 2 clients total.
+[rosbridge_websocket-1] [INFO] [1783651172.273907828] [rosbridge_websocket]: Calling services in existing thread
+[rosbridge_websocket-1] [INFO] [1783651172.274065619] [rosbridge_websocket]: Sending action goals in existing thread
+[rosbridge_websocket-1] [INFO] [1783651172.274401321] [rosbridge_websocket]: Client connected. 3 clients total.
+[rosbridge_websocket-1] [INFO] [1783651172.274729973] [rosbridge_websocket]: Calling services in existing thread
+
+## 거부 유형 분포 (grep -oE 'Message type ... field ...' | sort | uniq -c)
+  17143 Message type morai_msgs/CollisionData does not have a field header.seq
+  17142 Message type morai_msgs/IntersectionStatus does not have a field header.seq
+  17141 Message type tf2_msgs/TFMessage does not have a field transforms.header.seq
+  17141 Message type morai_msgs/VehicleCollisionData does not have a field header.seq
+  17141 Message type morai_msgs/ReplayInfo does not have a field header.seq
+  17141 Message type morai_msgs/ObjectStatusList does not have a field header.seq
+  17141 Message type morai_msgs/MoraiSimProcStatus does not have a field header.seq
+  17141 Message type morai_msgs/EgoVehicleStatus does not have a field header.seq
+   1710 Message type morai_msgs/GPSMessage does not have a field header.seq
+
+## 대표 에러 라인 (원문 3건)
+[rosbridge_websocket-1] [ERROR] [1783651173.335184406] [rosbridge_websocket]: [Client c0e8d8b6-0ccf-4c85-be35-49a5aa4fdacc] [id: /InsnStatus] publish: Message type morai_msgs/IntersectionStatus does not have a field header.seq
+[rosbridge_websocket-1] [ERROR] [1783651173.335456615] [rosbridge_websocket]: [Client c0e8d8b6-0ccf-4c85-be35-49a5aa4fdacc] [id: /InsnStatus] publish: Message type morai_msgs/IntersectionStatus does not have a field header.seq
+[rosbridge_websocket-1] [ERROR] [1783651173.339879748] [rosbridge_websocket]: [Client eea62d97-a63b-4cb9-b28f-b82889af6a10] [id: /sim/process/state/msg/MoraiSimProcStatus] publish: Message type morai_msgs/MoraiSimProcStatus does not have a field header.seq

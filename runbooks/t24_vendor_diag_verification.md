@@ -2,7 +2,7 @@
 
 | 항목 | 내용 |
 |---|---|
-| 버전 | v1.0 (2026-07-08, 준비 완료 — 실행은 GUI 세션 대기) |
+| 버전 | v1.1 (2026-07-10, **실행 완료 — 분기 C 판정**) |
 | 배경 | MORAI 회신(2026-07-08, 양종범): AVS-007은 "ROS2용 morai_msg가 빌드 환경에 소싱되지 않아 발생 — 환경 설정 확인 권장". 이 진단의 재검증. |
 | 판정 | 맞으면 Stage 05 블로커 즉시 해소 / 틀리면 반증 증거로 재회신 |
 | 스크립트 | `scripts/recheck/t24_observe.sh` (셀 N2·R2), 런처 `ROS2_OVERLAY` opt-in 추가 |
@@ -40,8 +40,8 @@
 |---|---|---|---|
 | N1: Native, 소싱 전(오버레이 없음) | SOURCE_ROS2=1 only | **FAIL** — startup std::bad_cast ×3, D1 participant 미생성 | E2(2026-07-06), vendor/morai/evidence/avs007_recheck_* |
 | R1: rosbridge, main-msgs | rosbridge 9090 + main 빌드 | **FAIL** — 토픽 생성/echo 0, header.seq 거부 28,976건 | E3(2026-07-06), avs007b_recheck_* |
-| **N2: Native, 26.R1 오버레이 소싱** | SOURCE_ROS2=1 + ROS2_OVERLAY | **미실행 (GUI 세션 대기)** | t24_observe.sh N2 |
-| **R2: rosbridge, 26.R1 msgs** | AVSTACK_WS=ros2_ws_26r1 | **미실행 (GUI 세션 대기)** | t24_observe.sh R2 |
+| **N2: Native, 26.R1 오버레이 소싱** | SOURCE_ROS2=1 + ROS2_OVERLAY | **FAIL (2026-07-10)** — 소싱 실물 증거(launcher environ에 ros2_ws_26r1 확인) 상태에서 startup std::bad_cast **동일 재현**(Player.log:547), D1 74xx 미바인딩. 기존과 동일하므로 r1 종결 | avs007_t24_20260710_N2r1_* (environ/player.log/ss) |
+| **R2: rosbridge, 26.R1 msgs** | AVSTACK_WS=ros2_ws_26r1 | **FAIL (2026-07-10)** — 연결 client 33·토픽 23 생성되나 echo 0건/15s, header.seq 거부 **53,686건**(9타입, 표준 tf2_msgs/TFMessage 포함). CtrlCmd 역방향 53건 발행에도 차량 무반응(SIM 상태 전제 미확정) | avs007_t24_20260710_R2r1_* (rosbridge.log/topics/echo/ctrlpub) |
 
 ### GUI 세션 실행 순서 (사용자 인터리브, 회당 ~10분)
 
@@ -79,9 +79,20 @@
 예단하지 않음(bad_cast가 rcl 초기화 계층이라는 관측은 있으나, 소싱-후 동작은 실측 전 미지).
 **예측과 다르면 예측이 아니라 기록을 갱신한다.**
 
+### 판정 (2026-07-10): **분기 C — 벤더 진단 틀림**
+
+- (사실) N2: 오버레이 소싱이 SIM 부모 프로세스 env에 반영된 실물 증거(`_launcher_environ.txt`,
+  `AMENT_PREFIX_PATH=…ros2_ws_26r1…`) 상태에서 기존과 자리까지 동일한 `std::bad_cast`(rcl 초기화, functions.cpp:65) 크래시.
+- (사실) R2: 26.R1 정합 msgs 소싱·타입 해석 정상(iface_ego.txt)에도 SIM publish 전량 거부 — 거부 9타입 전부
+  `header.seq`이고 **표준 tf2_msgs 포함**(morai_msgs와 무관함을 그 자체로 증명). 역방향 CtrlCmd도 무반응.
+- (추론) 원인은 우리 환경의 msgs 소싱이 아니라 SIM 측: native=rmw 로드 계층 실패(H2 RTTI/H3),
+  rosbridge=SIM이 ROS1 포맷(header.seq)으로 발행. → 재회신 필요(증거 패키지 동봉).
+- GUI 절차 정정(실측): 런처 → **Start 먼저** → 이후 지도·차량 선택. §3의 "지도 로드 → Start" 표기는 구버전 순서.
+  또한 SIM Network(Simulator/Ego/Sensor)는 이번 실측에서 **자동 연결**돼 있었음(수동 Connect 불요).
+
 ## 5. 산출물 체크리스트 (실행 세션에서)
-- [ ] records/commands.tsv append (N2·R2 각 회차)
-- [ ] records/issues.tsv AVS-007 AMEND (매트릭스 결과 반영)
-- [ ] 본 문서 §3 표 갱신 + 분기 판정 기입
+- [x] records/commands.tsv append (N2·R2 각 회차) — 2026-07-10 2행
+- [x] records/issues.tsv AVS-007 AMEND (매트릭스 결과 반영) — 2026-07-10
+- [x] 본 문서 §3 표 갱신 + 분기 판정 기입 — §4 분기 C
 - [ ] [MGMT] 반영 체크리스트: SIM-05 판정 / TECH-03·TECH-14·TECH-25 status 변경안 / 벤더 재회신 여부·요지 / kb/morai/observed 요약 1건
-- [ ] 재회신 필요 시: vendor/morai/OUTBOX 에 MORAI-001 후속 초안(evidence 동결 규약 준수)
+- [x] 재회신 필요 시: vendor/morai/OUTBOX 에 MORAI-001 후속 초안(evidence 동결 규약 준수) — MORAI-001_avs007_t24_followup.md
