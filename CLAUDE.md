@@ -49,7 +49,7 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 - **다음: 03.5 Python API 계약 검증** — **BLOCKED (AVS-006)**. 실물 API=OpenSCENARIO API 22.R3(`~/avstack/morai/scenario_runner`), Python 3.7.3 env(miniconda morai-osc) 구성 완료. sourcedefender 3.7 런타임 확보 불가로 보류(MORAI 문의 대기). AVS-001 RESOLVED.
 - 03.7 API 단일 실행 + 경계 감지: TODO (**게이트**)
 - 04 ROS2 Humble Host: PASS (desktop 273 pkg, talker→/chatter echo --once 수신, RMW=fastrtps, ROS_LOCALHOST_ONLY=0)
-- 05 MORAI ROS2 Native Topic: **BLOCKED (AVS-007)** — native·rosbridge 양 경로 모두 차단. 벤더 1차 회신(2026-07-08) 진단 "morai_msgs 미소싱"은 **T-24 검증(2026-07-10)으로 반증**: 26.R1 태그 오버레이 소싱(environ 실물 증거) 상태에서 native std::bad_cast 동일 재현 + rosbridge header.seq 거부 138,841건(15분 누계, 표준 tf 포함)·역방향 무반응 — 매트릭스 4/4 FAIL, 분기 C. **재회신 초안 검토 대기**(vendor/morai/OUTBOX/MORAI-001_avs007_t24_followup.md, 증거 동결 완료). 검증 정본: runbooks/t24_vendor_diag_verification.md.
+- 05 MORAI ROS2 Native Topic: **BLOCKED (AVS-007)** — native·rosbridge 양 경로 모두 차단. 벤더 1차 회신(2026-07-08) 진단 "morai_msgs 미소싱"은 **T-24 검증(2026-07-10)으로 반증**: 26.R1 태그 오버레이 소싱(environ 실물 증거) 상태에서 native std::bad_cast 동일 재현 + rosbridge header.seq 거부 138,841건(15분 누계, 표준 tf 포함)·역방향 무반응 — 매트릭스 4/4 FAIL, 분기 C. **재회신 발송 완료(2026-07-10, SENT/20260710_*) — 회신 대기**(벤더 검증환경 정보·호환조합·standalone ros2cs·ROS2 헤더 옵션). 검증 정본: runbooks/t24_vendor_diag_verification.md.
 - 05.5 Built-in Batch 파이프라인: TODO (**Autoware 전 필수**)
 - 05.7 재현성 캘리브레이션 + Multi-Map: TODO
 - 06~08 Autoware/Mapping/Closed-loop: 보류 (05.7 통과 후)
