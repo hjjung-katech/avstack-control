@@ -72,9 +72,9 @@ MORAI SIM 26.R1 + Scenario Runner를 실행 엔진으로 하는 **재현 가능�
 - NW-03 Dual-boot: 이미 구성됨 — 소급 Evidence 확보(파티션/EFI/BootOrder)
 - NW-04 Ubuntu Installation: 22.04.5 / kernel 6.8.0-136 부팅 확인 / **재부팅·Windows 실부팅·swap(2G) 미검증**
 - NW-05 Network: **도달성 확인 완료** — `apt update` 서명검증 OK(all up to date)·DNS·NTP·GitHub SSH 정상, NVIDIA CUDA repo 200, **ufw inactive**(방화벽 기록). gh 미설치(선택), 유선 X710 미결선. 증거: `nw05_reachability_*`, `nw05_sudo_*`
-- NW-06 NVIDIA/Display: **미착수** (드라이버 미설치, 디스플레이=ASPEED BMC, GUI 세션 없음)
+- NW-06 NVIDIA/Display: **PASS (2026-07-27)** — `nvidia-driver-580-open` 580.173.02(open kmod, DKMS 빌드, Secure Boot off로 서명 불요). `nvidia-smi`=RTX 5090 32GB·CUDA13, Vulkan **1.4.312 discrete**, nouveau 차단. **5090이 HDMI-A-2 물리 모니터 구동**(Xorg+gnome-shell on seat0/tty2) → §7.4 Local Console 기준선 확보(설치 전 BMC 폴백에서 전환됨). 증거: `nw06_preflight_*`, `nw06_postinstall_prereboot_*`, `nw06_postreboot_*`
 - NW-07 Workspace: [CONTROL] 클론됨, `~/avstack` 생성 시작, git identity 로컬 설정
-- **다음 실작업**: NW-01 자산 이관 경로 확정 → NW-06 NVIDIA/Display (Secure Boot off·CUDA repo 도달 확인됨)
+- **다음 실작업**: NW-01 자산 이관(랩탑 t15p→wrx90, 테일넷 경로) → NW-08 MORAI Native (원격 GUI 접근 방식=NoMachine/X `:0` 결정 필요)
 
 ### 원칙
 - 신규 Host PASS를 기존 `stages.tsv`에 혼입하지 않는다. Host별 Qualification 기록 스키마는 별도 ADR(Roadmap NW-07)로 확정한다.
