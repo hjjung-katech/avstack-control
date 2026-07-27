@@ -45,6 +45,31 @@ MORAI SIM 26.R1 + Scenario Runner를 실행 엔진으로 하는 **재현 가능�
 | AVS-006 | ~~sourcedefender py3.7 소멸~~ **RESOLVED(2026-07-10)** — py3.13 재빌드+sourcedefender 16.0.65 import 성공 | RESOLVED | 해소 |
 | AVS-007 | ~~ROS2 연동 차단~~ **RESOLVED(2026-07-10)** — 원인=RMW_IMPLEMENTATION 변수, native 수신+제어 실측 | RESOLVED | 해소 |
 
+## 2.9 신규 Reference Workstation Track (Bootstrap)
+
+> 기존 Laptop(t15p-dev-ubt) 기반 프레임워크 트랙과 **별도**로 관리한다. 기존 Stage PASS는 신규 Host에 승계하지 않는다(Roadmap §2.1).
+
+| 항목 | 내용 |
+|---|---|
+| Host | WRX90 / Threadripper PRO 9975WX / RTX 5090 32GB / 256GB ECC (hostname: `wrx90-dev-ubt`) |
+| Strategy | `runbooks/reference_workstation_environment_strategy.md` — **Accepted 0.9** |
+| Roadmap | `runbooks/new_workstation_bootstrap_roadmap.md` — **Accepted 0.9** |
+| 채택 결정 | ADR-012 (원장: records/decisions.tsv) |
+| Entry mode | **Post-install onboarding** — Ubuntu 재설치 없이 As-built 상태 수집부터 시작 |
+| 현물 확인 | 현 세션이 `wrx90-dev-ubt`(kernel 6.8.0-136)에서 실행됨 = Ubuntu 설치·부팅 **사실 확인**. 단 NW-04 Qualification(Windows 보존·EFI·재부팅 안정성)은 **미검증** |
+
+### 신규 Host Gate 현황 (원장 스키마 확정 전 임시 뷰 — stages.tsv 혼입 금지)
+- NW-00 Strategy Baseline: **완료** (전략·로드맵 Accepted 0.9, ADR-012)
+- NW-01 Existing Asset Inventory: TODO
+- NW-02 Windows Baseline / NW-03 Dual-boot Approval: **사후 확인 필요** (설치가 선행됐으므로 Evidence 소급 수집)
+- NW-04 Ubuntu Installation: 설치 수행됨 / **Qualification 대기** (설치 행위≠PASS)
+- **다음 실작업**: 현재 As-built 상태 수집 → NW-01~04 판정 → NW-05 Network Qualification
+
+### 원칙
+- 신규 Host PASS를 기존 `stages.tsv`에 혼입하지 않는다. Host별 Qualification 기록 스키마는 별도 ADR(Roadmap NW-07)로 확정한다.
+- PRIME offload·`DISPLAY=:1`은 신규 Host 기본값이 아니다(Local Console 기준선 우선).
+- Partition·EFI·Secure Boot·Firmware·Driver·데이터 삭제는 사용자 승인 없이 실행하지 않는다.
+
 ## 3. 문서 지도 (Document Map)
 
 | 문서 | 위치 | 역할 | 상태 |

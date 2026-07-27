@@ -3,13 +3,13 @@
 
 | 항목 | 내용 |
 |---|---|
-| 문서 상태 | Draft 0.1 |
+| 문서 상태 | Accepted 0.9 |
 | 작성일 | 2026-07-27 |
 | 문서 유형 | 실행 Roadmap / Gate Plan |
 | 상위 기준 | `reference_workstation_environment_strategy.md` Accepted 0.9 |
 | 적용 대상 | 신규 WRX90·RTX 5090 기반 Workstation |
 | 관리 위치(안) | `[CONTROL]:runbooks/new_workstation_bootstrap_roadmap.md` |
-| 현재 적용 여부 | 미적용 — 사용자 검토·승인 후 작업 기준으로 사용 |
+| 현재 적용 여부 | 적용 — 2026-07-27 채택(ADR-012), 신규 Workstation Bootstrap 작업 기준으로 사용 |
 | 목적 | Windows-only 출발점에서 Qualified Reference Environment, Docker·Autoware 확장 및 Second SSD Rebuild까지의 순서·Gate·산출물을 정의 |
 | 비목적 | 실제 설치 명령, 정확한 Partition 수치, 특정 Driver Version, 외부 Autoware 상세 Contract |
 

@@ -10,6 +10,16 @@ MORAI SIM + Scenario Runner + ROS2 Humble + Autoware 연동 환경 구축 프로
 - GPU: RTX 3050 Laptop 4GB, PRIME on-demand, driver 580.159.03
 - 기본 OpenGL은 Intel이므로 MORAI 계열 실행 시 NVIDIA offload 필수
 
+## 신규 Reference Workstation Track (WRX90)
+> 위 `## 환경`은 기존 Laptop(t15p-dev-ubt) 기준이다. 별도로 신규 WRX90 Workstation(`wrx90-dev-ubt` / RTX 5090)이 이 저장소를 공유하며 Bootstrap Track으로 진행 중이다. 관련 작업 시 다음 순서로 읽는다:
+> 1. `PROJECT_STATUS.md`(§2.9 Workstation Track) → 2. `runbooks/reference_workstation_environment_strategy.md` → 3. `runbooks/new_workstation_bootstrap_roadmap.md` → 4. 해당 Gate의 하위 Runbook → 5. 관련 records 및 기존 Laptop Evidence.
+
+- 기존 Laptop의 Stage PASS를 신규 Workstation에 승계하지 않는다.
+- 신규 Host의 Qualification 기록 스키마가 확정(별도 ADR)되기 전까지 신규 PASS를 기존 `stages.tsv`에 혼입하지 않는다.
+- PRIME offload와 `DISPLAY=:1`을 신규 Host 기본값으로 사용하지 않는다(Local Console 기준선 우선).
+- Partition·EFI·Secure Boot·BIOS/BMC·Firmware·Driver 기준 변경, 데이터/디스크 삭제는 사용자 승인 없이 실행하지 않는다.
+- Ubuntu가 이미 설치된 현재 상태는 재설치하지 않고 **Post-install onboarding**(As-built 수집→NW-01~04 판정→NW-05)으로 처리한다.
+
 ## 운영 규칙
 - Gate 기반 진행: 현재 Stage 통과 기준을 만족하기 전에 다음 Stage 작업을 하지 않는다.
 - MORAI Launcher/SIM/Scenario Runner는 scripts/run_morai_launcher_nvidia.sh로만 실행한다.
