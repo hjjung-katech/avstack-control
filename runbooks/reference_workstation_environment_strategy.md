@@ -170,6 +170,9 @@ Wireless Adapter의 실제 Chipset은 제품명이나 판매정보만으로 확�
 
 Ubuntu 설치 전후에 PCI ID와 실제 Kernel Driver를 확인하여 Host Manifest에 기록한다. `Intel AX210`이라고 가정한 상태로 Driver 전략을 고정하지 않는다.
 
+> [!note] As-built 실측 (2026-07-27)
+> 활성 Wireless = **MediaTek MT7921**(AzureWave 모듈, driver `mt7921e`, PCI `14c3:7922`) — **Intel AX210 아님**. 유선은 Intel X710 10GbE ×2(`i40e`, 현재 미결선). 본 §3.3이 예고한 위험(제품명으로 Chipset 단정 금지)이 실증되었다. 증거: `~/avstack/runs/asbuilt_20260727_152313.txt` ([WS]).
+
 Network는 초기 Package 설치와 Vendor 인증에 필요한 핵심 선행조건이다. Wi-Fi가 즉시 동작하지 않을 경우를 대비하여 Windows에서 필요한 Package를 준비해 USB로 전달하는 Offline Bootstrap 경로를 별도 Runbook에 포함한다.
 
 향후 안정적인 유선 Network가 제공되면 대용량 Data 전송과 ROS 2/DDS 운용의 기본 경로는 Ethernet을 우선한다.
@@ -1146,9 +1149,9 @@ Evaluation을 Simulator Runtime과 분리한다.
 | 항목 | 현재 상태 | 결정 시점 |
 |---|---|---|
 | Partition 용량 | TBD | Windows Baseline 후, Dual Boot Runbook 승인 전 |
-| Secure Boot | TBD | NVIDIA Driver 전략 결정 시 |
+| Secure Boot | **disabled** (As-built 2026-07-27) | NVIDIA Driver 전략 결정 시 |
 | NVIDIA Driver Version | TBD | Ubuntu Host Foundation Preflight |
-| Wireless Chipset/Driver | 미검증 | Windows/Ubuntu Hardware Inventory |
+| Wireless Chipset/Driver | **MediaTek MT7921 / mt7921e** (As-built 2026-07-27) | Windows/Ubuntu Hardware Inventory |
 | Host ID | TBD | Host Manifest 생성 시 |
 | Environment ID | TBD | Installed Environment 생성 시 |
 | Backup 도구 | TBD | Windows Baseline Runbook |

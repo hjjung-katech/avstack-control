@@ -58,12 +58,23 @@ MORAI SIM 26.R1 + Scenario Runner를 실행 엔진으로 하는 **재현 가능�
 | Entry mode | **Post-install onboarding** — Ubuntu 재설치 없이 As-built 상태 수집부터 시작 |
 | 현물 확인 | 현 세션이 `wrx90-dev-ubt`(kernel 6.8.0-136)에서 실행됨 = Ubuntu 설치·부팅 **사실 확인**. 단 NW-04 Qualification(Windows 보존·EFI·재부팅 안정성)은 **미검증** |
 
+### As-built 실측 (2026-07-27, 읽기전용)
+- 증거: `~/avstack/runs/asbuilt_20260727_152313.txt` ([WS], non-git)
+- HW 일치: Threadripper PRO 9975WX 32C/64T · 251GiB RAM · RTX 5090(`[10de:2b85]`) · NVMe 1.8T — 전략 §3.1 일치
+- **Wi-Fi 실물 = MediaTek MT7921(`mt7921e`), AX210 아님** (전략 §3.3 실증) · 10GbE Intel X710 ×2 미결선(DOWN) · tailscale UP
+- Secure Boot **disabled** · UEFI · Windows(NTFS 1TB)+Ubuntu(ext4 843G) dual-boot, `Windows Boot Manager` 부트엔트리 존재
+- 스택 미설치: nvidia-driver·docker·ros-humble·build-essential·mesa/vulkan·gh 전무 (순정 Ubuntu+git+tailscale)
+
 ### 신규 Host Gate 현황 (원장 스키마 확정 전 임시 뷰 — stages.tsv 혼입 금지)
 - NW-00 Strategy Baseline: **완료** (전략·로드맵 Accepted 0.9, ADR-012)
-- NW-01 Existing Asset Inventory: TODO
-- NW-02 Windows Baseline / NW-03 Dual-boot Approval: **사후 확인 필요** (설치가 선행됐으므로 Evidence 소급 수집)
-- NW-04 Ubuntu Installation: 설치 수행됨 / **Qualification 대기** (설치 행위≠PASS)
-- **다음 실작업**: 현재 As-built 상태 수집 → NW-01~04 판정 → NW-05 Network Qualification
+- NW-01 Existing Asset Inventory: **TODO** (랩탑→이 호스트 이관 미착수, `~/avstack`는 runs/만 생성)
+- NW-02 Windows Baseline: Windows 파티션 보존·부트엔트리 확인 / **BitLocker·Fast Startup·Recovery 미디어 미확인**
+- NW-03 Dual-boot: 이미 구성됨 — 소급 Evidence 확보(파티션/EFI/BootOrder)
+- NW-04 Ubuntu Installation: 22.04.5 / kernel 6.8.0-136 부팅 확인 / **재부팅·Windows 실부팅·swap(2G) 미검증**
+- NW-05 Network: Wi-Fi(MT7921) 활성 / **apt·DNS 도달성·gh 설치 미확인**
+- NW-06 NVIDIA/Display: **미착수** (드라이버 미설치, 디스플레이=ASPEED BMC, GUI 세션 없음)
+- NW-07 Workspace: [CONTROL] 클론됨, `~/avstack` 생성 시작, git identity 로컬 설정
+- **다음 실작업**: NW-05 도달성 확인 + NW-01 자산 이관 경로 확정 → NW-06 NVIDIA/Display
 
 ### 원칙
 - 신규 Host PASS를 기존 `stages.tsv`에 혼입하지 않는다. Host별 Qualification 기록 스키마는 별도 ADR(Roadmap NW-07)로 확정한다.
