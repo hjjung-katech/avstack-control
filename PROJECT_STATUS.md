@@ -67,14 +67,15 @@ MORAI SIM 26.R1 + Scenario Runner를 실행 엔진으로 하는 **재현 가능�
 
 ### 신규 Host Gate 현황 (원장 스키마 확정 전 임시 뷰 — stages.tsv 혼입 금지)
 - NW-00 Strategy Baseline: **완료** (전략·로드맵 Accepted 0.9, ADR-012)
-- NW-01 Existing Asset Inventory: **TODO** (랩탑→이 호스트 이관 미착수, `~/avstack`는 runs/만 생성)
+- NW-01 Existing Asset Inventory: **진행중** — 소스(랩탑 t15p) 접근용 SSH 전용키 생성(wrx90 `~/.ssh/wrx90_t15p`), 랩탑 authorized_keys 등록 대기. 읽기전용 인벤토리 도구 `scripts/inventory_avstack.sh` 작성. `~/avstack`는 runs/만 생성.
+  - **자산 원칙(§9.3)**: 랩탑 `~/avstack` 통째 복제 안 함. **지식·정의·절차(런북·스크립트·시나리오·conda yml·VERSIONS.lock·진단)는 git에서 최대 재사용**; **MORAI 본체는 벤더 원본에서 신규 설치 후 재판정(Requalify)**; 재다운로드 불가한 벤더 제공본(py3.13 API 원본 등)만 이관(Restore); License/account는 재인증; logs·빌드캐시는 이관 안 함. SSH 채널 용도=인벤토리(§9.2)+Restore 전송 한정(대량 rsync 아님).
 - NW-02 Windows Baseline: Windows 파티션 보존·부트엔트리 확인 / **BitLocker·Fast Startup·Recovery 미디어 미확인**
 - NW-03 Dual-boot: 이미 구성됨 — 소급 Evidence 확보(파티션/EFI/BootOrder)
 - NW-04 Ubuntu Installation: 22.04.5 / kernel 6.8.0-136 부팅 확인 / **재부팅·Windows 실부팅·swap(2G) 미검증**
 - NW-05 Network: **도달성 확인 완료** — `apt update` 서명검증 OK(all up to date)·DNS·NTP·GitHub SSH 정상, NVIDIA CUDA repo 200, **ufw inactive**(방화벽 기록). gh 미설치(선택), 유선 X710 미결선. 증거: `nw05_reachability_*`, `nw05_sudo_*`
 - NW-06 NVIDIA/Display: **PASS (2026-07-27)** — `nvidia-driver-580-open` 580.173.02(open kmod, DKMS 빌드, Secure Boot off로 서명 불요). `nvidia-smi`=RTX 5090 32GB·CUDA13, Vulkan **1.4.312 discrete**, nouveau 차단. **5090이 HDMI-A-2 물리 모니터 구동**(Xorg+gnome-shell on seat0/tty2) → §7.4 Local Console 기준선 확보(설치 전 BMC 폴백에서 전환됨). 증거: `nw06_preflight_*`, `nw06_postinstall_prereboot_*`, `nw06_postreboot_*`
 - NW-07 Workspace: [CONTROL] 클론됨, `~/avstack` 생성 시작, git identity 로컬 설정
-- **다음 실작업**: NW-01 자산 이관(랩탑 t15p→wrx90, 테일넷 경로) → NW-08 MORAI Native (원격 GUI 접근 방식=NoMachine/X `:0` 결정 필요)
+- **다음 실작업**: NW-01 인벤토리(랩탑 pubkey 등록 → `inventory_avstack.sh` 원격 실행 → MORAI 원본 재취득 가능 여부 판정) → Redownload+Requalify 계획 → NW-08 MORAI Native (원격 GUI 접근 방식=NoMachine/X `:0` 결정 필요)
 
 ### 원칙
 - 신규 Host PASS를 기존 `stages.tsv`에 혼입하지 않는다. Host별 Qualification 기록 스키마는 별도 ADR(Roadmap NW-07)로 확정한다.
