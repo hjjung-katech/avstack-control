@@ -76,7 +76,8 @@ MORAI SIM 26.R1 + Scenario Runner를 실행 엔진으로 하는 **재현 가능�
 - NW-05 Network: **도달성 확인 완료** — `apt update` 서명검증 OK(all up to date)·DNS·NTP·GitHub SSH 정상, NVIDIA CUDA repo 200, **ufw inactive**(방화벽 기록). gh 미설치(선택), 유선 X710 미결선. 증거: `nw05_reachability_*`, `nw05_sudo_*`
 - NW-06 NVIDIA/Display: **PASS (2026-07-27)** — `nvidia-driver-580-open` 580.173.02(open kmod, DKMS 빌드, Secure Boot off로 서명 불요). `nvidia-smi`=RTX 5090 32GB·CUDA13, Vulkan **1.4.312 discrete**, nouveau 차단. **5090이 HDMI-A-2 물리 모니터 구동**(Xorg+gnome-shell on seat0/tty2) → §7.4 Local Console 기준선 확보(설치 전 BMC 폴백에서 전환됨). 증거: `nw06_preflight_*`, `nw06_postinstall_prereboot_*`, `nw06_postreboot_*`
 - NW-07 Workspace: [CONTROL] 클론됨, `~/avstack` 생성 시작, git identity 로컬 설정
-- **다음 실작업**: NW-01 인벤토리(랩탑 pubkey 등록 → `inventory_avstack.sh` 원격 실행 → MORAI 원본 재취득 가능 여부 판정) → Redownload+Requalify 계획 → NW-08 MORAI Native (원격 GUI 접근 방식=NoMachine/X `:0` 결정 필요)
+- NW-08 MORAI Native: **준비 완료, 착수 대기** — 킥오프 정본 `runbooks/nw08_morai_native_kickoff.md`. 준비 실측: 디스크 768G여유·seat0 Xorg active·Vulkan PASS, 선행 libs(`libxcb-xinerama0`·`liblapack3`·`libblas3`) 미설치. GUI 접근 결정=**NoMachine 물리 데스크톱**이되 §7.4대로 **물리 콘솔 검증 우선**(사용자 wrx90 직접 접속·로컬 Claude Code 가능) → 통과 후 NoMachine(`9.8.2`) 원격 추가.
+- **다음 실작업**: NW-08 물리 콘솔에서 MORAI Launcher 설치→계정 로그인→SIM **26.R1.x** 다운로드→첫 구동 검증(§7.4 기준선). Restore 자산(`scenario-API-python3.13.zip`)은 `~/avstack/inbox/`에 안착·검증 완료.
 
 ### 원칙
 - 신규 Host PASS를 기존 `stages.tsv`에 혼입하지 않는다. Host별 Qualification 기록 스키마는 별도 ADR(Roadmap NW-07)로 확정한다.
