@@ -56,17 +56,29 @@ if [ "${SOURCE_ROS2:-0}" = "1" ] && [ -f /opt/ros/humble/setup.bash ]; then
     unset RMW_IMPLEMENTATION
   fi
   export ROS_LOCALHOST_ONLY=0
-  # ROS2_OVERLAY=<ws/install 경로> 지정 시 오버레이(morai_ros2_msgs 등)를 추가 소싱 (기본: ~/avstack/ros2_ws).
-  ROS2_OVERLAY="${ROS2_OVERLAY:-$HOME/avstack/ros2_ws/install}"
+  # ROS2_OVERLAY=<ws/install 경로> 지정 시 오버레이(morai_ros2_msgs 등)를 추가 소싱.
+  # 기본: ros2_ws_26r1/install 우선(존재 시), 없으면 ros2_ws/install.
+  if [ -z "${ROS2_OVERLAY:-}" ]; then
+    if [ -f "$HOME/avstack/ros2_ws_26r1/install/setup.bash" ]; then
+      ROS2_OVERLAY="$HOME/avstack/ros2_ws_26r1/install"
+    else
+      ROS2_OVERLAY="$HOME/avstack/ros2_ws/install"
+    fi
+  fi
   if [ -f "$ROS2_OVERLAY/setup.bash" ]; then
     set +u; source "$ROS2_OVERLAY/setup.bash"; set -u
     echo "[INFO] ROS2 overlay 소싱 → $ROS2_OVERLAY" >&2
   fi
-  # AVS-007 #2: FASTDDS_PREFIX 를 앞세워 SIM 만 SIM-빌드시점(2023) Fast-DDS 를 쓰게 함
-  # (시스템 /opt/ros/humble 은 그대로, LD_LIBRARY_PATH 우선순위로 libfastrtps 등만 오버라이드).
-  if [ -n "${FASTDDS_PREFIX:-}" ] && [ -d "$FASTDDS_PREFIX/opt/ros/humble/lib" ]; then
+  # AVS-007 #2: SIM의 ros2cs는 Fast-DDS 2.6.4 에 빌드됨 — 호스트 humble(2.6.11)을 그대로 쓰면
+  # DomainParticipantFactory 생성 시 ABI SIGSEGV(ROS2 Connect 크래시, 2026-07-28 wrx90 실측).
+  # FASTDDS_PREFIX(2.6.4 snap)를 LD_LIBRARY_PATH 앞에 세워 SIM만 2.6.4를 로드시킨다.
+  # 기본: 표준 위치 ~/avstack/ros2-fastdds-snap (랩탑·wrx90 공통). 이 snap은 Restore 자산(재다운 불가).
+  FASTDDS_PREFIX="${FASTDDS_PREFIX:-$HOME/avstack/ros2-fastdds-snap}"
+  if [ -d "$FASTDDS_PREFIX/opt/ros/humble/lib" ]; then
     export LD_LIBRARY_PATH="$FASTDDS_PREFIX/opt/ros/humble/lib:${LD_LIBRARY_PATH:-}"
-    echo "[INFO] AVS-007 #2: fastdds prefix 앞세움 → $FASTDDS_PREFIX"
+    echo "[INFO] AVS-007 #2: fastdds 2.6.4 prefix 앞세움 → $FASTDDS_PREFIX" >&2
+  else
+    echo "[WARN] FASTDDS_PREFIX 없음($FASTDDS_PREFIX) — ROS2 Connect 시 fastdds ABI SIGSEGV 위험(AVS-007 #2)." >&2
   fi
 fi
 
