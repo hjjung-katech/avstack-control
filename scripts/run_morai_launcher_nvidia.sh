@@ -78,6 +78,16 @@ if [ "${SOURCE_ROS2:-1}" = "1" ] && [ -f /opt/ros/humble/setup.bash ]; then
     export LD_LIBRARY_PATH="$FASTDDS_PREFIX/opt/ros/humble/lib:${LD_LIBRARY_PATH:-}"
     echo "[INFO] (실험) FASTDDS_PREFIX 앞세움 → $FASTDDS_PREFIX" >&2
   fi
+  # AVS-009 (2026-07-28 실측·양 호스트 재현): SIM 번들 libMORAI_V2X.so(정적 내장 C++,
+  # GNU_UNIQUE 심볼 125개 — RTLD_LOCAL 이어도 프로세스 전역 유일)가 host libfastrtps 보다
+  # 먼저 로드되면 나중에 로드된 fastrtps 가 V2X 의 구세대 unique 심볼에 바인딩되어
+  # ROS2 Connect 시 DomainParticipantFactory 생성자에서 SIGSEGV.
+  # SIM-free 재현: V2X 단독 dlopen→rclpy = crash / libfastrtps 선로드 후 V2X = 정상 (E1/E2).
+  # → host libfastrtps 를 LD_PRELOAD 로 선로드해 심볼 바인딩 순서를 항상 고정한다.
+  if [ -f /opt/ros/humble/lib/libfastrtps.so.2.6 ]; then
+    export LD_PRELOAD="/opt/ros/humble/lib/libfastrtps.so.2.6${LD_PRELOAD:+:$LD_PRELOAD}"
+    echo "[INFO] AVS-009 가드: host libfastrtps 선로드(LD_PRELOAD) — V2X unique-symbol 오염 차단" >&2
+  fi
 fi
 
 MORAI_DIR="${MORAI_DIR:-$HOME/avstack/morai/launcher/MoraiLauncher_Lin}"
@@ -96,6 +106,7 @@ ENV_FILE="${LOG_FILE%.log}.env"
   echo "FASTDDS_PREFIX=${FASTDDS_PREFIX:-<unset>}"
   echo "ROS2_OVERLAY=${ROS2_OVERLAY:-<unset>}"
   echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-<unset>}"
+  echo "LD_PRELOAD=${LD_PRELOAD:-<unset>}"
   echo -n "libfastrtps.so.2.6 해결="
   ldd_dir=""; IFS=':'; for d in ${LD_LIBRARY_PATH:-}; do
     if [ -e "$d/libfastrtps.so.2.6" ]; then ldd_dir="$(readlink -f "$d/libfastrtps.so.2.6")"; break; fi
