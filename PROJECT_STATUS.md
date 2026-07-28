@@ -78,6 +78,7 @@ MORAI SIM 26.R1 + Scenario Runner를 실행 엔진으로 하는 **재현 가능�
 - NW-07 Workspace: [CONTROL] 클론됨, `~/avstack` 생성 시작, git identity 로컬 설정
 - NW-08 MORAI Native GUI: **PASS (2026-07-28)** — 물리 5090 콘솔에서 Launcher 설치·계정 로그인·SIM **v.R1.260701.H3(26.R1)** 설치(14G)→**Start시 맵 렌더+차량 스폰 확인**. `Simulator.x86_64`가 RTX 5090 점유 실측(2220MiB, util 39%/53°C, 여유 충분). **offload-off host-conditional wrapper로 콘솔 렌더 정상 → AVS-004(랩탑 offload 검은화면) 물리 5090 비재발 실증.** §7.4 1~3단계(Local Console→5090 Vulkan→MORAI Native GUI) 완료. 선행 libs 6종 설치. 정본 `runbooks/nw08_morai_native_kickoff.md`, 증거 `nw08_sim_firstrun_20260728_101528.txt`.
 - NW-08 Remote Access: **PASS (2026-07-28)** — NoMachine 9.8.2 설치(4000/tcp), Mac 클라이언트가 물리 데스크톱(:1 seat0)에 접속해 **실행 중 SIM 화면을 원격 정상 미러링**(사용자 확인). §7.4 5단계(Local/Remote 비교) 통과 — 랩탑 AVS-004/005(offload+원격 검은화면·swapchain) 물리 5090 미러에선 비재발. 이후 SIM 종료는 사용자 수동(크래시 아님). 증거 `nw08_remote_nomachine_20260728_102134.txt`.
+- 준비-분석(자율, 게이트 미착수): **Python API zip 정적 분석 완료 (2026-07-28)** — Restore 자산 `scenario-API-python3.13.zip` 무결·구조·API 표면·의존성 확인. 정본 `runbooks/nw_python_api_readiness.md`, 증거 `nw_api313_static_20260728.txt`. 핵심: data/(시나리오·맵) 미동봉·sourcedefender 16.0.65 핀·SIM gRPC 7789 활성 필요.
 - **다음 실작업**: (b) 다운스트림 Requalify — SR/Built-in → ROS2 native(msgs `c84d648`/26.R1 재빌드, **ROS2 humble 설치=Stage04 상당 선행**) → py API(Restore zip). Restore 자산은 `~/avstack/inbox/`에 검증 완료. 원격 작업은 NoMachine으로 전환 가능.
 
 ### 원칙
