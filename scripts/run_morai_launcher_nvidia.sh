@@ -16,9 +16,26 @@
 #  RUN_REMOTE=1  SSH→NoMachine: DISPLAY=:1, XAUTHORITY=~/.Xauthority 자동 설정 (18.6)
 set -uo pipefail   # -e 아님: 종료코드를 직접 해석하기 위해
 
-export __NV_PRIME_RENDER_OFFLOAD=1
-export __VK_LAYER_NV_optimus=NVIDIA_only    # SIM은 Vulkan 렌더 (로그 확인)
-export __GLX_VENDOR_LIBRARY_NAME=nvidia      # 무해; GLX 폴백에만 사용
+# GPU 렌더 경로 (host-conditional):
+#  - PRIME offload 변수는 하이브리드 호스트(렌더용 Intel/AMD iGPU가 기본 GL + NVIDIA discrete, 예: 랩탑 t15p)에서만 필요.
+#  - NVIDIA가 주/단독 렌더러인 호스트(예: wrx90 RTX 5090; 디스플레이 컨트롤러=ASPEED BMC + NVIDIA만)에서는 미설정(전략 §7.4).
+#  - prime-select는 두 호스트 모두 on-demand라 구분 불가(2026-07-28 실측) → 렌더용 iGPU 존재로 감지.
+#  - 우선순위: 명시적 MORAI_PRIME_OFFLOAD(1/0) > 자동감지. ASPEED(BMC)는 렌더 iGPU가 아니므로 매칭 제외.
+if [ -n "${MORAI_PRIME_OFFLOAD:-}" ]; then
+  _offload="$MORAI_PRIME_OFFLOAD"
+elif lspci 2>/dev/null | grep -iE 'VGA compatible controller|3D controller|Display controller' | grep -qiE 'intel|radeon|\[AMD/ATI\]'; then
+  _offload=1
+else
+  _offload=0
+fi
+if [ "$_offload" = "1" ]; then
+  export __NV_PRIME_RENDER_OFFLOAD=1
+  export __VK_LAYER_NV_optimus=NVIDIA_only    # SIM은 Vulkan 렌더 (로그 확인)
+  export __GLX_VENDOR_LIBRARY_NAME=nvidia      # 무해; GLX 폴백에만 사용
+  echo "[INFO] PRIME offload 활성 (하이브리드 호스트)" >&2
+else
+  echo "[INFO] PRIME offload 비활성 (NVIDIA 주 렌더러) — offload 변수 미설정" >&2
+fi
 
 if [ "${RUN_REMOTE:-0}" = "1" ]; then
   export DISPLAY="${DISPLAY:-:1}"
