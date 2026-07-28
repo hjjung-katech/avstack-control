@@ -67,8 +67,9 @@ MORAI SIM 26.R1 + Scenario Runner를 실행 엔진으로 하는 **재현 가능�
 
 ### 신규 Host Gate 현황 (원장 스키마 확정 전 임시 뷰 — stages.tsv 혼입 금지)
 - NW-00 Strategy Baseline: **완료** (전략·로드맵 Accepted 0.9, ADR-012)
-- NW-01 Existing Asset Inventory: **진행중** — 소스(랩탑 t15p) 접근용 SSH 전용키 생성(wrx90 `~/.ssh/wrx90_t15p`), 랩탑 authorized_keys 등록 대기. 읽기전용 인벤토리 도구 `scripts/inventory_avstack.sh` 작성. `~/avstack`는 runs/만 생성.
-  - **자산 원칙(§9.3)**: 랩탑 `~/avstack` 통째 복제 안 함. **지식·정의·절차(런북·스크립트·시나리오·conda yml·VERSIONS.lock·진단)는 git에서 최대 재사용**; **MORAI 본체는 벤더 원본에서 신규 설치 후 재판정(Requalify)**; 재다운로드 불가한 벤더 제공본(py3.13 API 원본 등)만 이관(Restore); License/account는 재인증; logs·빌드캐시는 이관 안 함. SSH 채널 용도=인벤토리(§9.2)+Restore 전송 한정(대량 rsync 아님).
+- NW-01 Existing Asset Inventory: **인벤토리 완료 (2026-07-28)** — 랩탑 t15p `~/avstack`(17G) 읽기전용 실측 완료. SSH 전용키(`~/.ssh/wrx90_t15p`) 접속 검증. 증거: `~/avstack/runs/nw01_laptop_inventory_20260728_085812.txt`. **분류·이관/재검증 계획 정본: `runbooks/nw01_asset_migration_plan.md`**.
+  - **판정**: 실제 이관은 `scenario-API-python3.13.zip`(3.66M, Restore) 1건뿐. MORAI SIM 26.R1.x·Launcher·OpenSCENARIO API·msgs(`c84d648`/26.R1)·conda는 **Redownload+Requalify**. 라이선스=계정 로그인(동글 아님), SIM 26.R1.x 계정 재다운 가능(사용자 확인). 구 `ros2_ws`·`morai-osc`(py3.7)=Retire. logs/runs/eml=랩탑 Preserve. VERSIONS.lock RMW값은 stale(AVS-007상 미설정) — 승계 금지.
+  - **자산 원칙(§9.3)**: 랩탑 통째 복제 안 함. 지식·정의·절차는 git 최대 재사용; MORAI 본체는 벤더 원본 신규 설치 후 재판정; 재다운 불가 벤더 제공본만 Restore; License는 재인증; logs·캐시 이관 안 함.
 - NW-02 Windows Baseline: Windows 파티션 보존·부트엔트리 확인 / **BitLocker·Fast Startup·Recovery 미디어 미확인**
 - NW-03 Dual-boot: 이미 구성됨 — 소급 Evidence 확보(파티션/EFI/BootOrder)
 - NW-04 Ubuntu Installation: 22.04.5 / kernel 6.8.0-136 부팅 확인 / **재부팅·Windows 실부팅·swap(2G) 미검증**
