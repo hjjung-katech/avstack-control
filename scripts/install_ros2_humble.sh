@@ -11,11 +11,21 @@ if [ "${UBUNTU_CODENAME:-}" != "jammy" ]; then
   echo "  ERROR: Ubuntu 22.04(jammy)가 아님 → '$VERSION'. 중단."; exit 1
 fi
 command -v curl >/dev/null || sudo apt-get install -y curl
+# IPv6 기본 라우트가 없으면(AAAA만 잡혀 'Could not resolve host') IPv4 우선으로 강제한다.
+# 이 호스트는 IPv6 미연결(실측 2026-07-28) → curl/apt/rosdep 모두 IPv4로 풀린다.
+if [ "$(ip -6 route show default 2>/dev/null | grep -c default)" = "0" ]; then
+  if ! grep -qs '^precedence ::ffff:0:0/96  100' /etc/gai.conf; then
+    echo 'precedence ::ffff:0:0/96  100' | sudo tee -a /etc/gai.conf >/dev/null
+    echo "  IPv6 라우트 없음 → /etc/gai.conf 에 IPv4 우선 추가"
+  else
+    echo "  IPv4 우선 이미 설정됨"
+  fi
+fi
 echo "  OK: $VERSION"
 
 echo "[2/5] ROS2 apt 저장소 등록"
 if [ ! -s /usr/share/keyrings/ros-archive-keyring.gpg ]; then
-  sudo curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
+  sudo curl -4 -sSL --retry 3 https://raw.githubusercontent.com/ros/rosdistro/master/ros.key \
     -o /usr/share/keyrings/ros-archive-keyring.gpg
   echo "  키 설치됨"
 else
