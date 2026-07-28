@@ -49,7 +49,9 @@ fi
 #  - 따라서 이 블록은 RMW_IMPLEMENTATION 을 설정하지 않으며, 이미 설정돼 있으면 해제한다.
 #  - 동작 레시피(N3): humble + morai msgs ws 소싱 → SIM GUI 에서 ROS2 Connect → 수신 50Hz·제어 동작.
 #    주의: SIM 설정창(센서 등)이 열려 있는 동안 물리 일시정지(토픽은 마지막 값 반복) — T-25 B 실측.
-if [ "${SOURCE_ROS2:-0}" = "1" ] && [ -f /opt/ros/humble/setup.bash ]; then
+#  - 기본값 ON(2026-07-28): bashrc가 humble(fastrtps 2.6.11)을 소싱하므로, snap prefix(2.6.4)를 반드시
+#    앞세워야 ROS2 Connect 크래시를 막는다. SOURCE_ROS2=0 으로 명시적 opt-out 가능(순수 렌더 전용).
+if [ "${SOURCE_ROS2:-1}" = "1" ] && [ -f /opt/ros/humble/setup.bash ]; then
   set +u; source /opt/ros/humble/setup.bash; set -u
   if [ -n "${RMW_IMPLEMENTATION:-}" ]; then
     echo "[WARN] RMW_IMPLEMENTATION 설정됨(${RMW_IMPLEMENTATION}) — SIM startup 크래시 트리거(H4)라 해제함." >&2
@@ -89,6 +91,21 @@ USE_MORAISIM="${USE_MORAISIM:-1}"
 LOG_DIR="$HOME/avstack/logs"
 LOG_FILE="$LOG_DIR/MoraiLauncher_$(date +%F_%H%M%S).log"
 mkdir -p "$LOG_DIR"
+
+# 검증용 env 덤프(런치 직전 실효 환경) — snap prefix/RMW 적용 여부를 사후 확인.
+ENV_FILE="${LOG_FILE%.log}.env"
+{
+  echo "SOURCE_ROS2=${SOURCE_ROS2:-1}"
+  echo "RMW_IMPLEMENTATION=${RMW_IMPLEMENTATION:-<unset>}"
+  echo "FASTDDS_PREFIX=${FASTDDS_PREFIX:-<unset>}"
+  echo "ROS2_OVERLAY=${ROS2_OVERLAY:-<unset>}"
+  echo "LD_LIBRARY_PATH=${LD_LIBRARY_PATH:-<unset>}"
+  echo -n "libfastrtps.so.2.6 해결="
+  ldd_dir=""; IFS=':'; for d in ${LD_LIBRARY_PATH:-}; do
+    if [ -e "$d/libfastrtps.so.2.6" ]; then ldd_dir="$(readlink -f "$d/libfastrtps.so.2.6")"; break; fi
+  done; unset IFS
+  echo "${ldd_dir:-<not found in LD_LIBRARY_PATH>}"
+} > "$ENV_FILE" 2>/dev/null || true
 
 # 가드: 살아있는 런처가 있으면 새 실행은 창 없이 양보(exit0)하므로 막는다.
 if pgrep -f "$BIN" >/dev/null 2>&1; then
